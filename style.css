@@ -329,6 +329,93 @@ h2 { font-size: 28px; margin-bottom: 20px; }
   padding: 24px;
 }
 .contact-card h3 { margin-top: 0; }
+.collab-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 22px;
+  margin-top: 30px;
+}
+.collab-card {
+  background: #fff;
+  border: 1px solid #eaeaea;
+  border-radius: var(--radius);
+  padding: 22px;
+}
+.collab-photos {
+  display: flex;
+  gap: 8px;
+  margin: -22px -22px 16px;
+}
+.collab-photos img {
+  display: block;
+  width: 100%;
+  height: 110px;
+  object-fit: contain;
+  background: #fff;
+  padding: 14px;
+}
+.collab-photos.one img {
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+.collab-photos.two img:first-child {
+  border-radius: var(--radius) 0 0 0;
+}
+.collab-photos.two img:last-child {
+  border-radius: 0 var(--radius) 0 0;
+}
+.collab-card .tag {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: var(--accent, #2b6777);
+  background: rgba(43,103,119,.08);
+  padding: 3px 9px;
+  border-radius: 20px;
+  margin-bottom: 10px;
+}
+.collab-card h3 { margin: 0 0 6px; font-size: 17px; }
+.collab-card h3 a { color: var(--text); text-decoration: none; }
+.collab-card h3 a:hover { color: var(--blue); text-decoration: underline; }
+.collab-card p { margin: 0; color: var(--muted); font-size: 14px; }
+.events-list {
+  max-width: 760px;
+  margin: 30px auto 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.event-item {
+  background: #fff;
+  border: 1px solid #eaeaea;
+  border-left: 4px solid var(--accent, #2b6777);
+  border-radius: 10px;
+  padding: 16px 20px;
+}
+.event-item .event-date {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  color: var(--accent, #2b6777);
+  margin-bottom: 4px;
+}
+.event-item h4 { margin: 0 0 6px; font-size: 16px; }
+.event-item a { color: var(--accent, #2b6777); font-size: 13px; font-weight: 600; text-decoration: none; }
+.event-item a:hover { text-decoration: underline; }
+.events-status {
+  text-align: center;
+  color: var(--muted);
+  font-size: 14px;
+  padding: 20px 0;
+}
+.events-source-note {
+  text-align: center;
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 18px;
+}
 .booking-embed {
   display: block;
   width: 100%;
