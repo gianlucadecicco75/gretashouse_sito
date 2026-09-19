@@ -36,7 +36,7 @@
 
 <div class="page-header">
   <h1>Événements & Alentours</h1>
-  <p>Nos recommandations dans le Salento, et les événements à venir à Otrante — mis à jour automatiquement.</p>
+  <p>Nos recommandations dans le Salento, et les événements à venir à Otrante.</p>
 </div>
 
 <section id="collaborazioni">
@@ -82,11 +82,41 @@
 <section class="soft" id="eventi">
   <div class="inner">
     <h2 style="text-align:center;">Événements à Otrante</h2>
-    <p style="text-align:center; max-width:700px; margin:0 auto;">Mis à jour automatiquement depuis le calendrier d'événements du Pro Loco Otranto.</p>
-    <div id="events-list" class="events-list">
-      <div class="events-status">Chargement des événements…</div>
+    <p style="text-align:center; max-width:700px; margin:0 auto;">Une sélection d'événements à venir en ville, choisis et mis à jour par nos soins.</p>
+    <div class="events-list">
+      
+    <div class="event-item">
+      <div class="event-date">Jusqu'au 27 septembre 2026</div>
+      <h4>Otranto in Luce</h4>
+      <p style="color:var(--muted);font-size:14px;margin:0 0 8px">Spectacle immersif de vidéo-mapping dans le centre historique : les façades s'animent de lumières et de sons, chaque soir de 21h à minuit. Entrée gratuite.</p>
+      <a href="https://comune.otranto.le.it/novita/otranto-in-luce-la-pietra-racconta-la-storia-la-luce-la-rivela/" target="_blank" rel="noopener">En savoir plus →</a>
     </div>
-    <p class="events-source-note">Événements fournis par Pro Loco Otranto — <a href="https://www.prolocotranto.it/" target="_blank" rel="noopener">https://www.prolocotranto.it/</a></p>
+    <div class="event-item">
+      <div class="event-date">20 septembre 2026</div>
+      <h4>Otranto Antiqua</h4>
+      <p style="color:var(--muted);font-size:14px;margin:0 0 8px">Marché d'antiquités, vintage et brocante le long du Lungomare Kennedy.</p>
+      
+    </div>
+    <div class="event-item">
+      <div class="event-date">24 septembre 2026</div>
+      <h4>Sagra dell'Uva</h4>
+      <p style="color:var(--muted);font-size:14px;margin:0 0 8px">La traditionnelle fête des vendanges, avec dégustations et produits locaux.</p>
+      
+    </div>
+    <div class="event-item">
+      <div class="event-date">Jusqu'au 31 octobre 2026</div>
+      <h4>Il Codice Visibile</h4>
+      <p style="color:var(--muted);font-size:14px;margin:0 0 8px">Exposition d'art au Château Aragonais : plus de 50 œuvres entre figure, mot et culture pop.</p>
+      <a href="https://comune.otranto.le.it/novita/il-codice-visibile-figura-parola-sistema-tra-europa-e-pop/" target="_blank" rel="noopener">En savoir plus →</a>
+    </div>
+    <div class="event-item">
+      <div class="event-date">31 décembre – 1er janvier</div>
+      <h4>Réveillon et Alba dei Popoli</h4>
+      <p style="color:var(--muted);font-size:14px;margin:0 0 8px">Fête du Nouvel An sur la place principale puis, à l'aube du 1er janvier, le traditionnel salut au premier lever de soleil d'Italie — Otrante est le point le plus à l'est du pays.</p>
+      <a href="https://comune.otranto.le.it/novita/alba-dei-popoli-9/" target="_blank" rel="noopener">En savoir plus →</a>
+    </div>
+    </div>
+    <p class="events-source-note">Pour le programme complet et à jour : Comune di Otranto — <a href="https://comune.otranto.le.it/novita/" target="_blank" rel="noopener">https://comune.otranto.le.it/novita/</a></p>
   </div>
 </section>
 
@@ -96,34 +126,6 @@
     <span class="sub">Prix en temps réel · Confirmation immédiate</span>
   </a>
 </p>
-
-
-<script>
-(function() {
-  var container = document.getElementById('events-list');
-  if (!container) return;
-  var feedUrl = 'https://www.prolocotranto.it/feed/';
-  var apiUrl = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(feedUrl);
-  fetch(apiUrl).then(function(r) { return r.json(); }).then(function(data) {
-    if (data.status !== 'ok' || !data.items || !data.items.length) throw new Error('no items');
-    var items = data.items.slice(0, 6);
-    container.innerHTML = items.map(function(it) {
-      var d = new Date(it.pubDate);
-      var dateStr = isNaN(d.getTime()) ? '' : d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
-      var testo = (it.description || '').replace(/<[^>]+>/g, '').trim();
-      if (testo.length > 160) testo = testo.slice(0, 160) + '…';
-      return '<div class="event-item">' +
-        (dateStr ? '<div class="event-date">' + dateStr + '</div>' : '') +
-        '<h4>' + it.title + '</h4>' +
-        (testo ? '<p style="color:var(--muted);font-size:14px;margin:0 0 8px">' + testo + '</p>' : '') +
-        '<a href="' + it.link + '" target="_blank" rel="noopener">Lire la suite →</a>' +
-        '</div>';
-    }).join('');
-  }).catch(function() {
-    container.innerHTML = '<div class="events-status">Impossible de charger les événements pour le moment. Consultez le calendrier complet directement sur le site du Pro Loco Otranto.</div>';
-  });
-})();
-</script>
 
 <section id="bottom-nav">
   <ul class="pill-nav"><li><a href="index.html">Accueil</a></li><li><a href="chi-siamo.html">À propos</a></li><li><a href="galleria.html">Galerie</a></li><li><a href="prezzi.html">Tarifs</a></li><li><a href="eventi.html" class="active">Événements</a></li><li><a href="contatti.html">Contact</a></li></ul>
