@@ -110,7 +110,7 @@
 
 <div class="hero-header">
   <div class="lang-switch" id="site-lang-switch"></div>
-  <div class="logo-wrap"><a href="index.html"><img class="logo-img" src="images/logo.png" alt="Greta's House - Casa Vacanze Otranto"></a></div>
+  <div class="logo-wrap"><a href="index.html" id="logo-link"><img class="logo-img" src="images/logo.png" alt="Greta's House - Casa Vacanze Otranto"></a></div>
   <p class="brand-sub" id="brand-sub">Casa Vacanze · Otranto, Selva del Turchese</p>
   <ul class="pill-nav" id="site-nav"></ul>
 </div>
@@ -405,6 +405,43 @@ document.getElementById('btn-cerca').textContent = L.cercaDisponibilita;
     if (l === LANG) a.className = 'active';
     sw.appendChild(a);
   });
+})();
+
+// Intestazione del sito (logo, menu, cambio lingua) — uguale alle altre pagine di gretashouse.it,
+// così questa pagina si vede come parte del sito e non come uno strumento a sé stante.
+document.getElementById('brand-sub').textContent = L.brandSub;
+(function(){
+  var flags = { it:'it.svg', en:'gb.svg', fr:'fr.svg' };
+  var sw2 = document.getElementById('site-lang-switch');
+  var qs2 = new URLSearchParams(location.search);
+  ['it','en','fr'].forEach(function(l){
+    qs2.set('lang', l);
+    var a = document.createElement('a');
+    a.href = '?' + qs2.toString();
+    if (l === LANG) a.className = 'active';
+    a.innerHTML = '<img src="images/flags/' + flags[l] + '" alt="" width="20" height="14"> ' + l.toUpperCase();
+    sw2.appendChild(a);
+  });
+})();
+(function(){
+  var nav = document.getElementById('site-nav');
+  // Le altre pagine del sito sono in cartelle separate per lingua (en/, fr/); questa pagina invece
+  // resta unica alla radice e cambia lingua con ?lang=, quindi il menu deve puntare alla cartella
+  // giusta in base alla lingua scelta qui.
+  var prefisso = LANG === 'en' ? 'en/' : (LANG === 'fr' ? 'fr/' : '');
+  document.getElementById('logo-link').href = prefisso + 'index.html';
+  var voci = [
+    ['index.html', L.navHome],
+    ['chi-siamo.html', L.navChiSiamo],
+    ['galleria.html', L.navGalleria],
+    ['prezzi.html', L.navPrezzi],
+    ['eventi.html', L.navEventi],
+    ['contatti.html', L.navContatti]
+  ];
+  nav.innerHTML = voci.map(function(v){
+    var attivo = v[0] === 'prezzi.html' ? ' class="active"' : '';
+    return '<li><a href="' + prefisso + v[0] + '"' + attivo + '>' + v[1] + '</a></li>';
+  }).join('');
 })();
 
 // Traccia le ricerche di disponibilità (date desiderate dal cliente) per capire l'andamento della
