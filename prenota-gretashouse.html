@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="it" id="html-root">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Prenota — Greta's House</title>
+<title id="page-title">Prenota — Greta's House</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%231e88e5'/%3E%3Ctext x='12' y='17' font-size='15' text-anchor='middle'%3E%F0%9F%8F%A1%3C/text%3E%3C/svg%3E">
 <style>
   :root { --primary:#1e88e5; --accent:#2c3e50; }
@@ -66,6 +66,13 @@
   .roomcard .btn-row { display:flex; gap:8px; }
   .roomcard button { padding:11px 20px; border-radius:9px; border:none; background:var(--accent); color:#fff; font-weight:700; font-size:14px; cursor:pointer; }
   .roomcard button.btn-outline { background:#fff; color:var(--accent); border:1px solid #ddd0cd; }
+  .ota-compare { margin-top:14px; padding-top:12px; border-top:1px dashed #eee0dd; }
+  .ota-compare .ota-also { font-size:11px; color:#9a8b88; text-transform:uppercase; letter-spacing:.3px; margin-bottom:6px; }
+  .ota-compare .ota-badges { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
+  .ota-compare .ota-badge { font-size:11.5px; font-weight:700; color:#6b5b58; background:#f3ecea; border-radius:6px; padding:3px 9px; }
+  .ota-compare .ota-price-line { font-size:12.5px; color:#8a7a77; text-decoration:line-through; margin-bottom:2px; }
+  .ota-compare .ota-save { background:#e8f5e9; color:#2e7d32; border-radius:10px; padding:9px 12px; font-size:13.5px; font-weight:700; display:flex; align-items:center; gap:8px; }
+  .ota-compare .ota-save .cta { color:#1b5e20; }
   .msg { text-align:center; padding:40px 20px; color:#8a7a77; font-size:14px; }
   .msg .btn { max-width:280px; margin:14px auto 0; }
 
@@ -77,11 +84,24 @@
   .modalbox button.close { position:absolute; top:16px; right:18px; background:none; border:none; font-size:20px; cursor:pointer; color:#8a7a77; }
   .ok-box { text-align:center; padding:20px 6px; }
   .ok-box .tick { font-size:52px; }
+  .lang-switch { position:absolute; top:14px; right:16px; display:flex; gap:4px; z-index:3; }
+  .lang-switch a { font-size:11px; font-weight:700; color:#8a7a77; text-decoration:none; padding:3px 6px; border-radius:5px; }
+  .lang-switch a.active { background:var(--accent); color:#fff; }
+
+  .cond-box { background:#fff; border-radius:16px; padding:20px 22px; margin-top:22px; box-shadow:0 1px 3px rgba(0,0,0,.04); border:1px solid #eee0dd; flex:1 1 100%; width:100%; }
+  .cond-box h2 { font-size:16px; margin:0 0 16px; color:var(--accent); }
+  .cond-section { margin-bottom:16px; }
+  .cond-section:last-child { margin-bottom:0; }
+  .cond-section .cond-title { font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.3px; color:#6b5b58; margin-bottom:5px; }
+  .cond-section .cond-body { font-size:13.5px; color:#3a3230; line-height:1.6; }
+  .cond-section .cond-body div, .cond-section .cond-body p { margin:0 0 6px; }
+  .cond-section .cond-body div:last-child, .cond-section .cond-body p:last-child { margin-bottom:0; }
 </style>
 </head>
 <body>
 
-<div class="wrap">
+<div class="wrap" style="position:relative">
+  <div class="lang-switch" id="lang-switch"></div>
   <div class="searchcard">
     <div class="cal-wrap">
       <div class="cal-header">
@@ -89,7 +109,7 @@
         <div class="cal-month" id="cal-month-label"></div>
         <button class="cal-nav" id="cal-next" onclick="cambiaMese(1)">›</button>
       </div>
-      <div class="cal-weekdays"><span>lun</span><span>mar</span><span>mer</span><span>gio</span><span>ven</span><span>sab</span><span>dom</span></div>
+      <div class="cal-weekdays" id="cal-weekdays"></div>
       <div class="cal-grid" id="cal-grid"></div>
     </div>
 
@@ -97,13 +117,15 @@
     <input type="hidden" id="q-checkout">
 
     <div class="row3">
-      <div class="field"><label>Adulti</label><select id="q-adults"></select></div>
-      <div class="field"><label>Bambini</label><select id="q-children"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></div>
+      <div class="field"><label id="lbl-adulti">Adulti</label><select id="q-adults"></select></div>
+      <div class="field"><label id="lbl-bambini">Bambini</label><select id="q-children"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></div>
     </div>
     <button class="btn btn-primary" id="btn-cerca" onclick="cercaDisponibilita()">Cerca disponibilita</button>
   </div>
 
   <div class="results" id="results"></div>
+
+  <div class="cond-box" id="cond-box" style="display:none"></div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -111,6 +133,254 @@
 var SUPABASE_URL = 'https://xhacoxddmcjwvwwygdsa.supabase.co';
 var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhoYWNveGRkbWNqd3Z3d3lnZHNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY0NjM3ODUsImV4cCI6MjEwMjAzOTc4NX0.G7dbZAyG9hinOU-h3WmsZGeCNd8AfwXY4eN7doSL5qk';
 var sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ============================================================
+// LINGUA — un solo file per tutte le lingue del sito. La lingua si sceglie con ?lang=en oppure
+// ?lang=fr nel link (es. .../prenota-gretashouse.html?lang=en). Di default resta l'italiano, così
+// i link già esistenti sul sito continuano a funzionare senza modifiche. Un solo file da mantenere
+// invece di tre copie separate: ogni futura modifica vale automaticamente per tutte le lingue.
+// ============================================================
+var LANG = (function(){
+  try {
+    var p = new URLSearchParams(location.search).get('lang');
+    if (p) return p.toLowerCase();
+  } catch (e) {}
+  return 'it';
+})();
+if (['it','en','fr'].indexOf(LANG) === -1) LANG = 'it';
+
+var I18N = {
+  it: {
+    pageTitle: "Prenota — Greta's House",
+    adulti: 'Adulti',
+    bambini: 'Bambini',
+    weekdays: ['lun','mar','mer','gio','ven','sab','dom'],
+    mesi: ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'],
+    cercaDisponibilita: 'Cerca disponibilita',
+    ricercaInCorso: 'Ricerca in corso...',
+    controlloDisponibilita: 'Controllo la disponibilita...',
+    dateNonValide: 'Seleziona date valide (il check-out deve essere dopo il check-in).',
+    erroreDisponibilita: 'Errore nel controllare la disponibilita - riprova tra poco.',
+    nottiNonLibere: 'Alcune notti in questo intervallo non sono libere. Scegli un altro periodo.',
+    cameraMatrimoniale: 'Camera matrimoniale',
+    camerettaCastello: 'Cameretta con letti a castello',
+    sistemazionePer: function(pax){ return 'La sistemazione per ' + pax + ' person' + (pax===1?'a':'e'); },
+    per: function(pax){ return 'per ' + pax + ' person' + (pax===1?'a':'e'); },
+    notti: function(n){ return n + ' nott' + (n===1?'e':'i'); },
+    perNotte: '/notte',
+    scontoLungo: function(pct){ return '🎉 Sconto soggiorno lungo -' + pct + '% già applicato'; },
+    inviaRichiesta: 'Invia richiesta',
+    inviaRichiestaDisponibilita: 'Invia richiesta di disponibilità',
+    prenota: 'Prenota',
+    disponibileAncheSu: 'Disponibile anche su',
+    suAltriPortali: 'su altri portali',
+    risparmio: function(pct, val){ return 'Prenotando qui risparmi il ' + pct + '% (EUR ' + val + ')'; },
+    prenotaSubito: '— Prenota subito!',
+    minNottiMsg: function(min){ return 'Per le date scelte è richiesto un soggiorno minimo di ' + min + ' nott' + (min===1?'e':'i') + '. Prova ad allungare il soggiorno.'; },
+    nessunaUnita: 'Nessuna unita disponibile per queste date/ospiti. Prova con altre date, oppure invia una richiesta:',
+    richiediDisponibilita: 'Richiedi disponibilità',
+    checkin: 'Check-in',
+    checkout: 'Check-out',
+    nottiLabel: 'Notti',
+    persone: 'Persone',
+    unita: 'Unita',
+    adult: function(n){ return n + ' adult' + (n===1?'o':'i'); },
+    piuBambini: function(n){ return ' + ' + n + ' bambin' + (n===1?'o':'i'); },
+    nomeLabel: 'Nome *',
+    cognomeLabel: 'Cognome *',
+    telefonoLabel: 'Telefono *',
+    emailLabel: 'Email *',
+    noteOpz: 'Note (opzionale)',
+    tiRisponderemo: 'Ti risponderemo al più presto per confermare la disponibilità.',
+    compilaTutti: 'Compila tutti i campi: nome, cognome, telefono ed email sono obbligatori.',
+    invioInCorso: 'Invio in corso...',
+    richiestaInviata: 'Richiesta inviata!',
+    chiudi: 'Chiudi',
+    erroreInvioRichiesta: function(msg){ return "Errore durante l'invio della richiesta: " + msg + '. Riprova, oppure contattaci direttamente.'; },
+    completaPrenotazione: 'Completa la prenotazione',
+    totale: 'Totale',
+    nomeCognome: 'Nome e cognome',
+    emailPlain: 'Email',
+    telefonoPlain: 'Telefono',
+    confermaPrenotazione: 'Conferma prenotazione',
+    prenotazioneDiretta: 'Prenotazione diretta, senza carta di credito. Ti contatteremo per confermare i dettagli del check-in.',
+    inserisciNomeEmail: 'Inserisci almeno nome e email.',
+    prenotazioneConfermata: 'Prenotazione confermata!',
+    graziePerAverScelto: "Riceverai una email di conferma a breve. Grazie per aver scelto Greta's House!",
+    erroreConfermaPren: function(msg){ return 'Errore durante la prenotazione: ' + msg + '\nRiprova, oppure contattaci direttamente.'; },
+    sconosciuto: 'sconosciuto',
+    emailRichiestaSubject: "Richiesta ricevuta - Greta's House",
+    emailRichiestaBody: function(nome, ci, co, ospiti, unita){ return 'Gentile ' + nome + ',\n\nAbbiamo ricevuto la tua richiesta di disponibilità:\n\nCheck-in: ' + ci + '\nCheck-out: ' + co + '\nOspiti: ' + ospiti + (unita?'\nUnita: '+unita:'') + '\n\nTi risponderemo al più presto per confermare.\n\nCordiali saluti,\nGreta\'s House'; },
+    emailPrenotConfermataSubject: "Prenotazione confermata - Greta's House",
+    emailPrenotConfermataBody: function(nome, unita, ci, co, tot){ return 'Gentile '+nome+',\n\nLa ringraziamo per la prenotazione presso Greta\'s House.\n\nUnita: '+unita+'\nCheck-in: '+ci+'\nCheck-out: '+co+'\nTotale: EUR '+tot+'\n\nLa contatteremo presto per i dettagli del check-in.\n\nCordiali saluti,\nGreta\'s House'; },
+    condizioniTitolo: 'Condizioni della struttura',
+    condOrari: 'Check-in / Check-out',
+    condCancellazione: 'Politica di cancellazione',
+    condPagamento: 'Termini di pagamento',
+    condRegole: 'Regolamento interno',
+    condAltro: 'Altre condizioni'
+  },
+  en: {
+    pageTitle: "Book — Greta's House",
+    adulti: 'Adults',
+    bambini: 'Children',
+    weekdays: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+    mesi: ['January','February','March','April','May','June','July','August','September','October','November','December'],
+    cercaDisponibilita: 'Check availability',
+    ricercaInCorso: 'Searching...',
+    controlloDisponibilita: 'Checking availability...',
+    dateNonValide: 'Please select valid dates (check-out must be after check-in).',
+    erroreDisponibilita: 'Error checking availability — please try again shortly.',
+    nottiNonLibere: 'Some nights in this range are not available. Please choose a different period.',
+    cameraMatrimoniale: 'Double bedroom',
+    camerettaCastello: 'Bunk bed room',
+    sistemazionePer: function(pax){ return 'Accommodation for ' + pax + ' guest' + (pax===1?'':'s'); },
+    per: function(pax){ return 'for ' + pax + ' guest' + (pax===1?'':'s'); },
+    notti: function(n){ return n + ' night' + (n===1?'':'s'); },
+    perNotte: '/night',
+    scontoLungo: function(pct){ return '🎉 Long-stay discount -' + pct + '% already applied'; },
+    inviaRichiesta: 'Send request',
+    inviaRichiestaDisponibilita: 'Send availability request',
+    prenota: 'Book',
+    disponibileAncheSu: 'Also available on',
+    suAltriPortali: 'on other platforms',
+    risparmio: function(pct, val){ return 'Book here and save ' + pct + '% (EUR ' + val + ')'; },
+    prenotaSubito: '— Book now!',
+    minNottiMsg: function(min){ return 'A minimum stay of ' + min + ' night' + (min===1?'':'s') + ' is required for the selected dates. Try extending your stay.'; },
+    nessunaUnita: 'No unit available for these dates/guests. Try other dates, or send a request:',
+    richiediDisponibilita: 'Request availability',
+    checkin: 'Check-in',
+    checkout: 'Check-out',
+    nottiLabel: 'Nights',
+    persone: 'Guests',
+    unita: 'Unit',
+    adult: function(n){ return n + ' adult' + (n===1?'':'s'); },
+    piuBambini: function(n){ return ' + ' + n + ' child' + (n===1?'':'ren'); },
+    nomeLabel: 'First name *',
+    cognomeLabel: 'Last name *',
+    telefonoLabel: 'Phone *',
+    emailLabel: 'Email *',
+    noteOpz: 'Notes (optional)',
+    tiRisponderemo: "We'll get back to you shortly to confirm availability.",
+    compilaTutti: 'Please fill in all fields: first name, last name, phone and email are required.',
+    invioInCorso: 'Sending...',
+    richiestaInviata: 'Request sent!',
+    chiudi: 'Close',
+    erroreInvioRichiesta: function(msg){ return 'Error sending the request: ' + msg + '. Please try again, or contact us directly.'; },
+    completaPrenotazione: 'Complete your booking',
+    totale: 'Total',
+    nomeCognome: 'Full name',
+    emailPlain: 'Email',
+    telefonoPlain: 'Phone',
+    confermaPrenotazione: 'Confirm booking',
+    prenotazioneDiretta: "Direct booking, no credit card required. We'll contact you to confirm check-in details.",
+    inserisciNomeEmail: 'Please enter at least your name and email.',
+    prenotazioneConfermata: 'Booking confirmed!',
+    graziePerAverScelto: "You'll receive a confirmation email shortly. Thank you for choosing Greta's House!",
+    erroreConfermaPren: function(msg){ return 'Error during booking: ' + msg + '\nPlease try again, or contact us directly.'; },
+    sconosciuto: 'unknown',
+    emailRichiestaSubject: "Request received - Greta's House",
+    emailRichiestaBody: function(nome, ci, co, ospiti, unita){ return 'Dear ' + nome + ',\n\nWe have received your availability request:\n\nCheck-in: ' + ci + '\nCheck-out: ' + co + '\nGuests: ' + ospiti + (unita?'\nUnit: '+unita:'') + '\n\nWe will get back to you shortly to confirm.\n\nBest regards,\nGreta\'s House'; },
+    emailPrenotConfermataSubject: "Booking confirmed - Greta's House",
+    emailPrenotConfermataBody: function(nome, unita, ci, co, tot){ return 'Dear '+nome+',\n\nThank you for your booking at Greta\'s House.\n\nUnit: '+unita+'\nCheck-in: '+ci+'\nCheck-out: '+co+'\nTotal: EUR '+tot+'\n\nWe will contact you soon with check-in details.\n\nBest regards,\nGreta\'s House'; },
+    condizioniTitolo: 'Property conditions',
+    condOrari: 'Check-in / Check-out',
+    condCancellazione: 'Cancellation policy',
+    condPagamento: 'Payment terms',
+    condRegole: 'House rules',
+    condAltro: 'Other conditions'
+  },
+  fr: {
+    pageTitle: "Réserver — Greta's House",
+    adulti: 'Adultes',
+    bambini: 'Enfants',
+    weekdays: ['lun','mar','mer','jeu','ven','sam','dim'],
+    mesi: ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'],
+    cercaDisponibilita: 'Vérifier la disponibilité',
+    ricercaInCorso: 'Recherche en cours...',
+    controlloDisponibilita: 'Vérification de la disponibilité...',
+    dateNonValide: "Veuillez sélectionner des dates valides (le départ doit être après l'arrivée).",
+    erroreDisponibilita: 'Erreur lors de la vérification — veuillez réessayer.',
+    nottiNonLibere: 'Certaines nuits de cette période ne sont pas disponibles. Choisissez une autre période.',
+    cameraMatrimoniale: 'Chambre double',
+    camerettaCastello: 'Chambre avec lits superposés',
+    sistemazionePer: function(pax){ return 'Hébergement pour ' + pax + ' personne' + (pax===1?'':'s'); },
+    per: function(pax){ return 'pour ' + pax + ' personne' + (pax===1?'':'s'); },
+    notti: function(n){ return n + ' nuit' + (n===1?'':'s'); },
+    perNotte: '/nuit',
+    scontoLungo: function(pct){ return '🎉 Réduction séjour longue durée -' + pct + '% déjà appliquée'; },
+    inviaRichiesta: 'Envoyer une demande',
+    inviaRichiestaDisponibilita: 'Envoyer une demande de disponibilité',
+    prenota: 'Réserver',
+    disponibileAncheSu: 'Également disponible sur',
+    suAltriPortali: "sur d'autres plateformes",
+    risparmio: function(pct, val){ return 'Réservez ici et économisez ' + pct + '% (EUR ' + val + ')'; },
+    prenotaSubito: '— Réservez maintenant !',
+    minNottiMsg: function(min){ return 'Un séjour minimum de ' + min + ' nuit' + (min===1?'':'s') + ' est requis pour ces dates. Essayez de prolonger votre séjour.'; },
+    nessunaUnita: "Aucune unité disponible pour ces dates/ce nombre de personnes. Essayez d'autres dates, ou envoyez une demande :",
+    richiediDisponibilita: 'Demander la disponibilité',
+    checkin: 'Arrivée',
+    checkout: 'Départ',
+    nottiLabel: 'Nuits',
+    persone: 'Personnes',
+    unita: 'Unité',
+    adult: function(n){ return n + ' adulte' + (n===1?'':'s'); },
+    piuBambini: function(n){ return ' + ' + n + ' enfant' + (n===1?'':'s'); },
+    nomeLabel: 'Prénom *',
+    cognomeLabel: 'Nom *',
+    telefonoLabel: 'Téléphone *',
+    emailLabel: 'Email *',
+    noteOpz: 'Remarques (facultatif)',
+    tiRisponderemo: 'Nous vous répondrons rapidement pour confirmer la disponibilité.',
+    compilaTutti: 'Veuillez remplir tous les champs : prénom, nom, téléphone et email sont obligatoires.',
+    invioInCorso: 'Envoi en cours...',
+    richiestaInviata: 'Demande envoyée !',
+    chiudi: 'Fermer',
+    erroreInvioRichiesta: function(msg){ return "Erreur lors de l'envoi de la demande : " + msg + '. Réessayez, ou contactez-nous directement.'; },
+    completaPrenotazione: 'Finalisez votre réservation',
+    totale: 'Total',
+    nomeCognome: 'Nom complet',
+    emailPlain: 'Email',
+    telefonoPlain: 'Téléphone',
+    confermaPrenotazione: 'Confirmer la réservation',
+    prenotazioneDiretta: "Réservation directe, sans carte de crédit. Nous vous contacterons pour confirmer les détails de l'arrivée.",
+    inserisciNomeEmail: 'Veuillez indiquer au moins votre nom et votre email.',
+    prenotazioneConfermata: 'Réservation confirmée !',
+    graziePerAverScelto: "Vous recevrez un email de confirmation sous peu. Merci d'avoir choisi Greta's House !",
+    erroreConfermaPren: function(msg){ return 'Erreur lors de la réservation : ' + msg + '\nRéessayez, ou contactez-nous directement.'; },
+    sconosciuto: 'inconnue',
+    emailRichiestaSubject: "Demande reçue - Greta's House",
+    emailRichiestaBody: function(nome, ci, co, ospiti, unita){ return 'Cher/Chère ' + nome + ',\n\nNous avons bien reçu votre demande de disponibilité :\n\nArrivée : ' + ci + '\nDépart : ' + co + '\nPersonnes : ' + ospiti + (unita?'\nUnité : '+unita:'') + '\n\nNous vous répondrons rapidement pour confirmer.\n\nCordialement,\nGreta\'s House'; },
+    emailPrenotConfermataSubject: "Réservation confirmée - Greta's House",
+    emailPrenotConfermataBody: function(nome, unita, ci, co, tot){ return 'Cher/Chère '+nome+',\n\nNous vous remercions pour votre réservation chez Greta\'s House.\n\nUnité : '+unita+'\nArrivée : '+ci+'\nDépart : '+co+'\nTotal : EUR '+tot+'\n\nNous vous contacterons prochainement pour les détails de l\'arrivée.\n\nCordialement,\nGreta\'s House'; },
+    condizioniTitolo: "Conditions de l'établissement",
+    condOrari: 'Check-in / Check-out',
+    condCancellazione: "Politique d'annulation",
+    condPagamento: 'Conditions de paiement',
+    condRegole: 'Règlement intérieur',
+    condAltro: 'Autres conditions'
+  }
+};
+var L = I18N[LANG];
+
+document.getElementById('html-root').lang = LANG;
+document.getElementById('page-title').textContent = L.pageTitle;
+document.getElementById('lbl-adulti').textContent = L.adulti;
+document.getElementById('lbl-bambini').textContent = L.bambini;
+document.getElementById('cal-weekdays').innerHTML = L.weekdays.map(function(w){ return '<span>' + w + '</span>'; }).join('');
+document.getElementById('btn-cerca').textContent = L.cercaDisponibilita;
+(function(){
+  var sw = document.getElementById('lang-switch');
+  var qs = new URLSearchParams(location.search);
+  ['it','en','fr'].forEach(function(l){
+    qs.set('lang', l);
+    var a = document.createElement('a');
+    a.href = '?' + qs.toString();
+    a.textContent = l.toUpperCase();
+    if (l === LANG) a.className = 'active';
+    sw.appendChild(a);
+  });
+})();
 
 // Traccia le ricerche di disponibilità (date desiderate dal cliente) per capire l'andamento della
 // domanda futura — usa la stessa sessione salvata da analytics.js quando presente. Non blocca mai
@@ -160,8 +430,8 @@ var IMG_MATRIMONIALE = 'https://gretashouse.it/images/camera-matrimoniale.jpg';
 var IMG_CASTELLO = 'https://gretashouse.it/images/cameretta-letti.jpg';
 
 function roomPreviewHtml(pax) {
-  var matrimoniale = '<div class="rp-item"><img src="' + IMG_MATRIMONIALE + '" alt="Camera matrimoniale" loading="lazy"><div class="rp-label">Camera matrimoniale</div></div>';
-  var castello = '<div class="rp-item"><img src="' + IMG_CASTELLO + '" alt="Cameretta con letti a castello" loading="lazy"><div class="rp-label">Cameretta con letti a castello</div></div>';
+  var matrimoniale = '<div class="rp-item"><img src="' + IMG_MATRIMONIALE + '" alt="' + L.cameraMatrimoniale + '" loading="lazy"><div class="rp-label">' + L.cameraMatrimoniale + '</div></div>';
+  var castello = '<div class="rp-item"><img src="' + IMG_CASTELLO + '" alt="' + L.camerettaCastello + '" loading="lazy"><div class="rp-label">' + L.camerettaCastello + '</div></div>';
   if (pax >= 3) {
     return '<div class="rp-photos">' + matrimoniale + castello + '</div>';
   }
@@ -175,7 +445,7 @@ function renderPreview() {
   var results = document.getElementById('results');
   if (!results) return;
   results.innerHTML = '<div class="preview-panel">' +
-    '<div class="pp-title">La sistemazione per ' + pax + ' person' + (pax===1?'a':'e') + '</div>' +
+    '<div class="pp-title">' + L.sistemazionePer(pax) + '</div>' +
     roomPreviewHtml(pax) +
   '</div>';
 }
@@ -187,7 +457,6 @@ renderPreview();
 // ============================================================
 // CALENDARIO DISPONIBILITA (pallini verdi/rossi in base alle prenotazioni reali)
 // ============================================================
-var MESI_IT = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
 var oggiDate = new Date(); oggiDate.setHours(0,0,0,0);
 var meseVisualizzato = new Date(oggiDate.getFullYear(), oggiDate.getMonth(), 1);
 var calSelCheckin = null, calSelCheckout = null;
@@ -195,6 +464,46 @@ var calRooms = null, calBookings = null, calBlocks = null;
 
 function fmtISO(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 function fmtIT(iso){ var p = iso.split('-'); return p[2]+'/'+p[1]+'/'+p[0]; }
+
+// ============================================================
+// CONDIZIONI DELLA STRUTTURA — lette dalle stesse impostazioni compilate nel PMS
+// (pagina "📜 Condizioni"), mostrate qui nella lingua scelta sul sito. Se una sezione non è
+// stata tradotta (Inglese/Francese lasciati vuoti), viene mostrata automaticamente la versione
+// italiana per quella sola sezione, così non resta mai un buco nella pagina.
+// ============================================================
+function condStripSito(html) { return (html || '').replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim(); }
+
+function buildCondizioniSitoHtml(settings) {
+  var sfx = LANG === 'en' ? 'EN' : (LANG === 'fr' ? 'FR' : '');
+  function campo(chiave) {
+    var v = settings[chiave + sfx];
+    if (sfx && !condStripSito(v)) v = settings[chiave];
+    return v;
+  }
+  var sections = [
+    [L.condOrari, campo('condOrari')],
+    [L.condCancellazione, campo('condCancellazione')],
+    [L.condPagamento, campo('condPagamento')],
+    [L.condRegole, campo('condRegole')],
+    [L.condAltro, campo('condAltro')]
+  ].filter(function (s) { return condStripSito(s[1]); });
+  if (!sections.length) return '';
+  return '<h2>' + L.condizioniTitolo + '</h2>' + sections.map(function (s) {
+    return '<div class="cond-section"><div class="cond-title">' + s[0] + '</div><div class="cond-body">' + s[1] + '</div></div>';
+  }).join('');
+}
+
+async function caricaCondizioni() {
+  try {
+    var risSet = await sb.from('app_blobs').select('data').eq('key', 'settings').maybeSingle();
+    var settings = (risSet.data && risSet.data.data) || {};
+    var html = buildCondizioniSitoHtml(settings);
+    var box = document.getElementById('cond-box');
+    if (html) { box.innerHTML = html; box.style.display = 'block'; }
+  } catch (e) {
+    console.error('Condizioni della struttura non caricate:', e);
+  }
+}
 
 async function caricaDatiCalendario() {
   try {
@@ -228,7 +537,7 @@ function renderCalendario() {
   var label = document.getElementById('cal-month-label');
   var grid = document.getElementById('cal-grid');
   if (!label || !grid) return;
-  label.textContent = MESI_IT[meseVisualizzato.getMonth()] + ' ' + meseVisualizzato.getFullYear();
+  label.textContent = L.mesi[meseVisualizzato.getMonth()] + ' ' + meseVisualizzato.getFullYear();
 
   var primoLimite = new Date(oggiDate.getFullYear(), oggiDate.getMonth(), 1);
   document.getElementById('cal-prev').disabled = (meseVisualizzato.getTime() <= primoLimite.getTime());
@@ -277,7 +586,7 @@ function calSelezionaGiorno(iso) {
       cursore.setDate(cursore.getDate()+1);
     }
     if (!tutteLibere) {
-      alert('Alcune notti in questo intervallo non sono libere. Scegli un altro periodo.');
+      alert(L.nottiNonLibere);
       calSelCheckin = iso; calSelCheckout = null;
     } else {
       calSelCheckout = iso;
@@ -294,6 +603,7 @@ function cambiaMese(dir) {
 }
 
 caricaDatiCalendario();
+caricaCondizioni();
 
 function notti(checkin, checkout) {
   var a = new Date(checkin+'T00:00:00'), b = new Date(checkout+'T00:00:00');
@@ -396,14 +706,14 @@ async function cercaDisponibilita() {
 
   var results = document.getElementById('results');
   if (!checkin || !checkout || n < 1) {
-    results.innerHTML = '<div class="msg">Seleziona date valide (il check-out deve essere dopo il check-in).</div>';
+    results.innerHTML = '<div class="msg">' + L.dateNonValide + '</div>';
     return;
   }
 
   var btn = document.getElementById('btn-cerca');
   btn.disabled = true;
-  btn.textContent = 'Ricerca in corso...';
-  results.innerHTML = '<div class="msg">Controllo la disponibilita...</div>';
+  btn.textContent = L.ricercaInCorso;
+  results.innerHTML = '<div class="msg">' + L.controlloDisponibilita + '</div>';
 
   try {
     var risR = await sb.from('rooms').select('*').eq('status', 'disponibile');
@@ -425,7 +735,8 @@ async function cercaDisponibilita() {
       bookings: bookings,
       revenueConfig: (risRC.data && risRC.data.data) || { soglie: [], eventi: [] },
       listinoAggiustamenti: (risLA.data && risLA.data.data) || [],
-      scontiSoggiornoLungo: (risSet.data && risSet.data.data && risSet.data.data.scontiSoggiornoLungo) || []
+      scontiSoggiornoLungo: (risSet.data && risSet.data.data && risSet.data.data.scontiSoggiornoLungo) || [],
+      markupOTA: (risSet.data && risSet.data.data && risSet.data.data.markupOTA) || 0
     };
 
     var occupatePerCamera = {};
@@ -453,10 +764,10 @@ async function cercaDisponibilita() {
     if (!camereLibere.length) {
       var minRichiestoMax = Math.max.apply(null, (rooms||[]).map(function(r){ return minNottiRichiesto(r.type); }).concat([1]));
       var messaggioMin = (minRichiestoMax > n)
-        ? ('Per le date scelte è richiesto un soggiorno minimo di ' + minRichiestoMax + ' nott' + (minRichiestoMax===1?'e':'i') + '. Prova ad allungare il soggiorno.')
-        : 'Nessuna unita disponibile per queste date/ospiti. Prova con altre date, oppure invia una richiesta:';
+        ? L.minNottiMsg(minRichiestoMax)
+        : L.nessunaUnita;
       results.innerHTML = '<div class="msg">' + messaggioMin +
-        '<button class="btn btn-primary" onclick="inviaRichiesta(\'' + checkin + '\', \'' + checkout + '\', ' + adults + ', ' + children + ', \'\')">Invia richiesta di disponibilità</button>' +
+        '<button class="btn btn-primary" onclick="inviaRichiesta(\'' + checkin + '\', \'' + checkout + '\', ' + adults + ', ' + children + ', \'\')">' + L.inviaRichiestaDisponibilita + '</button>' +
       '</div>';
       return;
     }
@@ -468,25 +779,40 @@ async function cercaDisponibilita() {
       var totale = prezzoTotaleSoggiorno(r, listinoRoom, pax, checkin, checkout, ctx);
       var perNotte = totale / n;
       var scontoAttivo = scontoSoggiornoLungoPct(n, ctx.scontiSoggiornoLungo);
+      var markupOTA = ctx.markupOTA || 0;
+      var totaleOTA = totale * (1 + markupOTA / 100);
+      var risparmio = totaleOTA - totale;
+      // Confronto con i portali: il prezzo "altri portali" non è una stima a caso, è calcolato con
+      // lo stesso markup che il gestionale usa davvero per mandare i prezzi a Booking/Airbnb — quindi
+      // mostriamo una % di risparmio (sempre vera) invece di scrivere un prezzo preciso "di Booking"
+      // che potremmo non azzeccare in tempo reale (sconti Genius, valuta, tasse locali, ecc.).
+      var otaCompareHtml = markupOTA > 0 ?
+        '<div class="ota-compare">' +
+          '<div class="ota-also">' + L.disponibileAncheSu + '</div>' +
+          '<div class="ota-badges"><span class="ota-badge">Booking.com</span><span class="ota-badge">Airbnb</span></div>' +
+          '<div class="ota-price-line">EUR ' + totaleOTA.toFixed(2) + ' ' + L.suAltriPortali + '</div>' +
+          '<div class="ota-save">🎉 <span>' + L.risparmio(markupOTA, risparmio.toFixed(2)) + ' <span class="cta">' + L.prenotaSubito + '</span></span></div>' +
+        '</div>' : '';
       return '<div class="roomcard">' +
-        '<div class="rn">' + r.name + ' per ' + pax + ' person' + (pax===1?'a':'e') + '</div>' +
+        '<div class="rn">' + r.name + ' ' + L.per(pax) + '</div>' +
         '<div class="rt">' + (r.type||'') + '</div>' +
-        (scontoAttivo>0 ? '<div style="display:inline-block;background:#e8f5e9;color:#2e7d32;font-size:11px;font-weight:700;padding:2px 8px;border-radius:12px;margin-bottom:4px">🎉 Sconto soggiorno lungo -' + scontoAttivo + '% già applicato</div>' : '') +
+        (scontoAttivo>0 ? '<div style="display:inline-block;background:#e8f5e9;color:#2e7d32;font-size:11px;font-weight:700;padding:2px 8px;border-radius:12px;margin-bottom:4px">' + L.scontoLungo(scontoAttivo) + '</div>' : '') +
         '<div class="price-row">' +
-          '<div class="price">EUR ' + totale.toFixed(2) + '<br><small>' + n + ' nott' + (n===1?'e':'i') + ' - EUR ' + perNotte.toFixed(2) + '/notte</small></div>' +
+          '<div class="price">EUR ' + totale.toFixed(2) + '<br><small>' + L.notti(n) + ' - EUR ' + perNotte.toFixed(2) + L.perNotte + '</small></div>' +
           '<div class="btn-row">' +
-            '<button class="btn-outline" onclick="inviaRichiesta(\'' + checkin + '\', \'' + checkout + '\', ' + adults + ', ' + children + ', \'' + r.name.replace(/'/g,"\\'") + '\')">Invia richiesta</button>' +
-            '<button onclick="apriPrenotazione(\'' + r.id + '\', \'' + r.name.replace(/'/g,"\\'") + '\', ' + totale.toFixed(2) + ')">Prenota</button>' +
+            '<button class="btn-outline" onclick="inviaRichiesta(\'' + checkin + '\', \'' + checkout + '\', ' + adults + ', ' + children + ', \'' + r.name.replace(/'/g,"\\'") + '\')">' + L.inviaRichiesta + '</button>' +
+            '<button onclick="apriPrenotazione(\'' + r.id + '\', \'' + r.name.replace(/'/g,"\\'") + '\', ' + totale.toFixed(2) + ')">' + L.prenota + '</button>' +
           '</div>' +
         '</div>' +
+        otaCompareHtml +
       '</div>';
-    }).join('') + '<div class="preview-panel"><div class="pp-title">La sistemazione per ' + pax + ' person' + (pax===1?'a':'e') + '</div>' + roomPreviewHtml(pax) + '</div>';
+    }).join('') + '<div class="preview-panel"><div class="pp-title">' + L.sistemazionePer(pax) + '</div>' + roomPreviewHtml(pax) + '</div>';
   } catch (err) {
     console.error(err);
-    results.innerHTML = '<div class="msg">Errore nel controllare la disponibilita - riprova tra poco.</div>';
+    results.innerHTML = '<div class="msg">' + L.erroreDisponibilita + '</div>';
   } finally {
     btn.disabled = false;
-    btn.textContent = 'Cerca disponibilita';
+    btn.textContent = L.cercaDisponibilita;
   }
 }
 
@@ -497,19 +823,28 @@ function inviaRichiesta(checkin, checkout, adults, children, roomName) {
   div.innerHTML =
     '<div class="modalbox">' +
       '<button class="close" onclick="document.getElementById(\'req-overlay\').remove()">X</button>' +
-      '<h2>Richiedi disponibilità</h2>' +
-      '<div class="rowinfo"><span>Check-in</span><span>' + fmtIT(checkin) + '</span></div>' +
-      '<div class="rowinfo"><span>Check-out</span><span>' + fmtIT(checkout) + '</span></div>' +
-      (roomName ? '<div class="rowinfo"><span>Unita</span><span><b>' + roomName + '</b></span></div>' : '') +
-      '<div class="field"><label>Nome *</label><input type="text" id="r-nome" required></div>' +
-      '<div class="field"><label>Cognome *</label><input type="text" id="r-cognome" required></div>' +
-      '<div class="field"><label>Telefono *</label><input type="text" id="r-telefono" required></div>' +
-      '<div class="field"><label>Email *</label><input type="email" id="r-email" required></div>' +
-      '<div class="field"><label>Note (opzionale)</label><input type="text" id="r-note"></div>' +
-      '<button class="btn btn-primary" id="btn-invia-richiesta" onclick="confermaRichiesta(\'' + checkin + '\', \'' + checkout + '\', ' + adults + ', ' + children + ', \'' + (roomName||'').replace(/'/g,"\\'") + '\')">Invia richiesta</button>' +
-      '<div style="font-size:11px;color:#9a8b88;margin-top:10px">Ti risponderemo al più presto per confermare la disponibilità.</div>' +
+      '<h2>' + L.richiediDisponibilita + '</h2>' +
+      '<div class="rowinfo"><span>' + L.checkin + '</span><span>' + fmtIT(checkin) + '</span></div>' +
+      '<div class="rowinfo"><span>' + L.checkout + '</span><span>' + fmtIT(checkout) + '</span></div>' +
+      '<div class="rowinfo"><span>' + L.nottiLabel + '</span><span>' + notti(checkin, checkout) + '</span></div>' +
+      '<div class="rowinfo"><span>' + L.persone + '</span><span>' + L.adult(adults) + (children ? L.piuBambini(children) : '') + '</span></div>' +
+      (roomName ? '<div class="rowinfo"><span>' + L.unita + '</span><span><b>' + roomName + '</b></span></div>' : '') +
+      '<div class="field"><label>' + L.nomeLabel + '</label><input type="text" id="r-nome" required></div>' +
+      '<div class="field"><label>' + L.cognomeLabel + '</label><input type="text" id="r-cognome" required></div>' +
+      '<div class="field"><label>' + L.telefonoLabel + '</label><input type="text" id="r-telefono" required></div>' +
+      '<div class="field"><label>' + L.emailLabel + '</label><input type="email" id="r-email" required></div>' +
+      '<div class="field"><label>' + L.noteOpz + '</label><input type="text" id="r-note"></div>' +
+      '<button class="btn btn-primary" id="btn-invia-richiesta" onclick="confermaRichiesta(\'' + checkin + '\', \'' + checkout + '\', ' + adults + ', ' + children + ', \'' + (roomName||'').replace(/'/g,"\\'") + '\')">' + L.inviaRichiesta + '</button>' +
+      '<div style="font-size:11px;color:#9a8b88;margin-top:10px">' + L.tiRisponderemo + '</div>' +
     '</div>';
   document.body.appendChild(div);
+}
+
+// Descrizione ospiti in ITALIANO per le notifiche interne a Gian (che legge sempre in italiano,
+// indipendentemente dalla lingua scelta dall'ospite sul sito) — distinta da quella nella lingua
+// dell'ospite (L.adult/L.piuBambini) usata invece nei testi rivolti al cliente.
+function descrizioneOspitiIT(adults, children) {
+  return adults + ' adult' + (adults === 1 ? 'o' : 'i') + (children > 0 ? ', ' + children + ' bambin' + (children === 1 ? 'o' : 'i') : '');
 }
 
 async function confermaRichiesta(checkin, checkout, adults, children, roomName) {
@@ -518,14 +853,15 @@ async function confermaRichiesta(checkin, checkout, adults, children, roomName) 
   var telefono = (document.getElementById('r-telefono')||{value:''}).value.trim();
   var email = (document.getElementById('r-email')||{value:''}).value.trim();
   var note = (document.getElementById('r-note')||{value:''}).value.trim();
-  if (!nome || !cognome || !telefono || !email) { alert('Compila tutti i campi: nome, cognome, telefono ed email sono obbligatori.'); return; }
+  if (!nome || !cognome || !telefono || !email) { alert(L.compilaTutti); return; }
 
   var btn = document.getElementById('btn-invia-richiesta');
   btn.disabled = true;
-  btn.textContent = 'Invio in corso...';
+  btn.textContent = L.invioInCorso;
 
   var nomeCompleto = nome + ' ' + cognome;
-  var descrizioneOspiti = adults + ' adult' + (adults === 1 ? 'o' : 'i') + (children > 0 ? ', ' + children + ' bambin' + (children === 1 ? 'o' : 'i') : '');
+  var descrizioneOspitiOwner = descrizioneOspitiIT(adults, children);
+  var descrizioneOspitiGuest = L.adult(adults) + (children > 0 ? L.piuBambini(children) : '');
 
   try {
     // Salva la richiesta anche nel gestionale, tra le richieste di preventivo (se non riesce, l'email viene comunque inviata)
@@ -554,6 +890,7 @@ async function confermaRichiesta(checkin, checkout, adults, children, roomName) 
     if (s.emailInvioPromemoria && s.passwordInvioPromemoria) {
       var functionUrl = SUPABASE_URL + '/functions/v1/invio-ricevuta';
       if (s.email) {
+        // Notifica interna a Gian — resta sempre in italiano
         var risNotif = await fetch(functionUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer '+SUPABASE_ANON_KEY, 'apikey': SUPABASE_ANON_KEY },
@@ -561,20 +898,20 @@ async function confermaRichiesta(checkin, checkout, adults, children, roomName) 
             smtpEmail: s.emailInvioPromemoria, smtpPassword: s.passwordInvioPromemoria,
             to: s.email, toName: 'Greta\'s House',
             subject: 'Nuova richiesta di disponibilità dal sito - ' + nomeCompleto,
-            message: 'Nuova richiesta di disponibilità ricevuta dal sito web:\n\nNome: ' + nomeCompleto + '\nTelefono: ' + telefono + '\nEmail: ' + email + '\n\nCheck-in: ' + fmtIT(checkin) + '\nCheck-out: ' + fmtIT(checkout) + '\nOspiti: ' + descrizioneOspiti + (roomName ? '\nUnita: ' + roomName : '') + (note ? '\nNote: ' + note : '') + '\n\nVai su DeskFlow - Richieste di preventivo per gestirla.'
+            message: 'Nuova richiesta di disponibilità ricevuta dal sito web (lingua: ' + LANG.toUpperCase() + '):\n\nNome: ' + nomeCompleto + '\nTelefono: ' + telefono + '\nEmail: ' + email + '\n\nCheck-in: ' + fmtIT(checkin) + '\nCheck-out: ' + fmtIT(checkout) + '\nOspiti: ' + descrizioneOspitiOwner + (roomName ? '\nUnita: ' + roomName : '') + (note ? '\nNote: ' + note : '') + '\n\nVai su DeskFlow - Richieste di preventivo per gestirla.'
           })
         });
         inviata = risNotif.ok;
       }
-      // Conferma di ricezione al cliente
+      // Conferma di ricezione al cliente — nella lingua scelta sul sito
       fetch(functionUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer '+SUPABASE_ANON_KEY, 'apikey': SUPABASE_ANON_KEY },
         body: JSON.stringify({
           smtpEmail: s.emailInvioPromemoria, smtpPassword: s.passwordInvioPromemoria,
           to: email, toName: nomeCompleto,
-          subject: 'Richiesta ricevuta - Greta\'s House',
-          message: 'Gentile ' + nomeCompleto + ',\n\nAbbiamo ricevuto la tua richiesta di disponibilità:\n\nCheck-in: ' + fmtIT(checkin) + '\nCheck-out: ' + fmtIT(checkout) + '\nOspiti: ' + descrizioneOspiti + (roomName ? '\nUnita: ' + roomName : '') + '\n\nTi risponderemo al più presto per confermare.\n\nCordiali saluti,\nGreta\'s House'
+          subject: L.emailRichiestaSubject,
+          message: L.emailRichiestaBody(nomeCompleto, fmtIT(checkin), fmtIT(checkout), descrizioneOspitiGuest, roomName)
         })
       }).catch(function(){});
     }
@@ -582,22 +919,22 @@ async function confermaRichiesta(checkin, checkout, adults, children, roomName) 
     if (!inviata) {
       // Fallback: se le credenziali email non sono configurate in Impostazioni, apri comunque un mailto come rete di sicurezza
       var subject = 'Richiesta disponibilità - Greta\'s House (' + nomeCompleto + ')';
-      var body = 'Nome: ' + nomeCompleto + '\nTelefono: ' + telefono + '\nEmail: ' + email + '\n\nCheck-in: ' + fmtIT(checkin) + '\nCheck-out: ' + fmtIT(checkout) + '\nOspiti: ' + descrizioneOspiti + (roomName ? '\nUnita: ' + roomName : '') + (note ? '\nNote: ' + note : '');
+      var body = 'Nome: ' + nomeCompleto + '\nTelefono: ' + telefono + '\nEmail: ' + email + '\n\nCheck-in: ' + fmtIT(checkin) + '\nCheck-out: ' + fmtIT(checkout) + '\nOspiti: ' + descrizioneOspitiOwner + (roomName ? '\nUnita: ' + roomName : '') + (note ? '\nNote: ' + note : '');
       window.location.href = 'mailto:gianlucadec@libero.it?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
     }
 
     document.getElementById('req-overlay').innerHTML =
       '<div class="modalbox"><div class="ok-box">' +
         '<div class="tick">OK</div>' +
-        '<h2>Richiesta inviata!</h2>' +
-        '<p style="color:#8a7a77;font-size:13.5px">Ti risponderemo al più presto per confermare la disponibilità.</p>' +
-        '<button class="btn btn-primary" onclick="document.getElementById(\'req-overlay\').remove()">Chiudi</button>' +
+        '<h2>' + L.richiestaInviata + '</h2>' +
+        '<p style="color:#8a7a77;font-size:13.5px">' + L.tiRisponderemo + '</p>' +
+        '<button class="btn btn-primary" onclick="document.getElementById(\'req-overlay\').remove()">' + L.chiudi + '</button>' +
       '</div></div>';
   } catch (err) {
     console.error(err);
     btn.disabled = false;
-    btn.textContent = 'Invia richiesta';
-    alert('Errore durante l\'invio della richiesta: ' + (err.message || 'sconosciuto') + '. Riprova, oppure contattaci direttamente.');
+    btn.textContent = L.inviaRichiesta;
+    alert(L.erroreInvioRichiesta(err.message || L.sconosciuto));
   }
 }
 
@@ -608,17 +945,17 @@ function apriPrenotazione(roomId, roomName, totale) {
   div.innerHTML =
     '<div class="modalbox">' +
       '<button class="close" onclick="document.getElementById(\'book-overlay\').remove()">X</button>' +
-      '<h2>Completa la prenotazione</h2>' +
-      '<div class="rowinfo"><span>Unita</span><span><b>' + roomName + '</b></span></div>' +
-      '<div class="rowinfo"><span>Check-in</span><span>' + ultimaRicerca.checkin + '</span></div>' +
-      '<div class="rowinfo"><span>Check-out</span><span>' + ultimaRicerca.checkout + '</span></div>' +
-      '<div class="rowinfo"><span>Totale</span><span><b>EUR ' + totale.toFixed(2) + '</b></span></div>' +
-      '<div class="field"><label>Nome e cognome</label><input type="text" id="p-nome"></div>' +
-      '<div class="field"><label>Email</label><input type="email" id="p-email"></div>' +
-      '<div class="field"><label>Telefono</label><input type="text" id="p-telefono"></div>' +
-      '<div class="field"><label>Note (opzionale)</label><input type="text" id="p-note"></div>' +
-      '<button class="btn btn-primary" id="btn-conferma" onclick="confermaPrenotazione(\'' + roomId + '\', \'' + roomName.replace(/'/g,"\\'") + '\', ' + totale.toFixed(2) + ')">Conferma prenotazione</button>' +
-      '<div style="font-size:11px;color:#9a8b88;margin-top:10px">Prenotazione diretta, senza carta di credito. Ti contatteremo per confermare i dettagli del check-in.</div>' +
+      '<h2>' + L.completaPrenotazione + '</h2>' +
+      '<div class="rowinfo"><span>' + L.unita + '</span><span><b>' + roomName + '</b></span></div>' +
+      '<div class="rowinfo"><span>' + L.checkin + '</span><span>' + ultimaRicerca.checkin + '</span></div>' +
+      '<div class="rowinfo"><span>' + L.checkout + '</span><span>' + ultimaRicerca.checkout + '</span></div>' +
+      '<div class="rowinfo"><span>' + L.totale + '</span><span><b>EUR ' + totale.toFixed(2) + '</b></span></div>' +
+      '<div class="field"><label>' + L.nomeCognome + '</label><input type="text" id="p-nome"></div>' +
+      '<div class="field"><label>' + L.emailPlain + '</label><input type="email" id="p-email"></div>' +
+      '<div class="field"><label>' + L.telefonoPlain + '</label><input type="text" id="p-telefono"></div>' +
+      '<div class="field"><label>' + L.noteOpz + '</label><input type="text" id="p-note"></div>' +
+      '<button class="btn btn-primary" id="btn-conferma" onclick="confermaPrenotazione(\'' + roomId + '\', \'' + roomName.replace(/'/g,"\\'") + '\', ' + totale.toFixed(2) + ')">' + L.confermaPrenotazione + '</button>' +
+      '<div style="font-size:11px;color:#9a8b88;margin-top:10px">' + L.prenotazioneDiretta + '</div>' +
     '</div>';
   document.body.appendChild(div);
 }
@@ -628,11 +965,11 @@ async function confermaPrenotazione(roomId, roomName, totale) {
   var email = (document.getElementById('p-email')||{value:''}).value.trim();
   var telefono = (document.getElementById('p-telefono')||{value:''}).value.trim();
   var note = (document.getElementById('p-note')||{value:''}).value.trim();
-  if (!nome || !email) { alert('Inserisci almeno nome e email.'); return; }
+  if (!nome || !email) { alert(L.inserisciNomeEmail); return; }
 
   var btn = document.getElementById('btn-conferma');
   btn.disabled = true;
-  btn.textContent = 'Invio in corso...';
+  btn.textContent = L.invioInCorso;
 
   try {
     var guestId = null;
@@ -670,17 +1007,19 @@ async function confermaPrenotazione(roomId, roomName, totale) {
       var s = (risBlob.data && risBlob.data.data) || {};
       if (s.emailInvioPromemoria && s.passwordInvioPromemoria) {
         var functionUrl = SUPABASE_URL + '/functions/v1/invio-ricevuta';
+        // Email di conferma al cliente — nella lingua scelta sul sito
         fetch(functionUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer '+SUPABASE_ANON_KEY, 'apikey': SUPABASE_ANON_KEY },
           body: JSON.stringify({
             smtpEmail: s.emailInvioPromemoria, smtpPassword: s.passwordInvioPromemoria,
             to: email, toName: nome,
-            subject: 'Prenotazione confermata - Greta\'s House',
-            message: 'Gentile '+nome+',\n\nLa ringraziamo per la prenotazione presso Greta\'s House.\n\nUnita: '+roomName+'\nCheck-in: '+ultimaRicerca.checkin+'\nCheck-out: '+ultimaRicerca.checkout+'\nTotale: EUR '+totale.toFixed(2)+'\n\nLa contatteremo presto per i dettagli del check-in.\n\nCordiali saluti,\nGreta\'s House'
+            subject: L.emailPrenotConfermataSubject,
+            message: L.emailPrenotConfermataBody(nome, roomName, ultimaRicerca.checkin, ultimaRicerca.checkout, totale.toFixed(2))
           })
         }).catch(function(){});
         if (s.email) {
+          // Notifica interna a Gian — resta sempre in italiano
           fetch(functionUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer '+SUPABASE_ANON_KEY, 'apikey': SUPABASE_ANON_KEY },
@@ -688,7 +1027,7 @@ async function confermaPrenotazione(roomId, roomName, totale) {
               smtpEmail: s.emailInvioPromemoria, smtpPassword: s.passwordInvioPromemoria,
               to: s.email, toName: 'Greta\'s House',
               subject: 'Nuova prenotazione dal sito - '+nome,
-              message: 'Nuova prenotazione ricevuta dal sito web:\n\nOspite: '+nome+' ('+email+', '+telefono+')\nUnita: '+roomName+'\nCheck-in: '+ultimaRicerca.checkin+'\nCheck-out: '+ultimaRicerca.checkout+'\nTotale: EUR '+totale.toFixed(2)+(note?'\nNote: '+note:'')+'\n\nVai su DeskFlow - Prenotazioni per gestirla.'
+              message: 'Nuova prenotazione ricevuta dal sito web (lingua: ' + LANG.toUpperCase() + '):\n\nOspite: '+nome+' ('+email+', '+telefono+')\nUnita: '+roomName+'\nCheck-in: '+ultimaRicerca.checkin+'\nCheck-out: '+ultimaRicerca.checkout+'\nTotale: EUR '+totale.toFixed(2)+(note?'\nNote: '+note:'')+'\n\nVai su DeskFlow - Prenotazioni per gestirla.'
             })
           }).catch(function(){});
         }
@@ -698,15 +1037,15 @@ async function confermaPrenotazione(roomId, roomName, totale) {
     document.getElementById('book-overlay').innerHTML =
       '<div class="modalbox"><div class="ok-box">' +
         '<div class="tick">OK</div>' +
-        '<h2>Prenotazione confermata!</h2>' +
-        '<p style="color:#8a7a77;font-size:13.5px">Riceverai una email di conferma a breve. Grazie per aver scelto Greta\'s House!</p>' +
-        '<button class="btn btn-primary" onclick="document.getElementById(\'book-overlay\').remove(); location.reload();">Chiudi</button>' +
+        '<h2>' + L.prenotazioneConfermata + '</h2>' +
+        '<p style="color:#8a7a77;font-size:13.5px">' + L.graziePerAverScelto + '</p>' +
+        '<button class="btn btn-primary" onclick="document.getElementById(\'book-overlay\').remove(); location.reload();">' + L.chiudi + '</button>' +
       '</div></div>';
   } catch (err) {
     console.error(err);
     btn.disabled = false;
-    btn.textContent = 'Conferma prenotazione';
-    alert('Errore durante la prenotazione: ' + (err.message || 'sconosciuto') + '\nRiprova, oppure contattaci direttamente.');
+    btn.textContent = L.confermaPrenotazione;
+    alert(L.erroreConfermaPren(err.message || L.sconosciuto));
   }
 }
 </script>
