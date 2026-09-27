@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title id="page-title">Prenota — Greta's House</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%231e88e5'/%3E%3Ctext x='12' y='17' font-size='15' text-anchor='middle'%3E%F0%9F%8F%A1%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
 <style>
   :root { --primary:#1e88e5; --accent:#2c3e50; }
   * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
@@ -84,9 +85,9 @@
   .modalbox button.close { position:absolute; top:16px; right:18px; background:none; border:none; font-size:20px; cursor:pointer; color:#8a7a77; }
   .ok-box { text-align:center; padding:20px 6px; }
   .ok-box .tick { font-size:52px; }
-  .lang-switch { position:absolute; top:14px; right:16px; display:flex; gap:4px; z-index:3; }
-  .lang-switch a { font-size:11px; font-weight:700; color:#8a7a77; text-decoration:none; padding:3px 6px; border-radius:5px; }
-  .lang-switch a.active { background:var(--accent); color:#fff; }
+  .booking-lang-switch { position:absolute; top:14px; right:16px; display:flex; gap:4px; z-index:3; }
+  .booking-lang-switch a { font-size:11px; font-weight:700; color:#8a7a77; text-decoration:none; padding:3px 6px; border-radius:5px; }
+  .booking-lang-switch a.active { background:var(--accent); color:#fff; }
 
   .cond-box { background:#fff; border-radius:16px; padding:20px 22px; margin-top:22px; box-shadow:0 1px 3px rgba(0,0,0,.04); border:1px solid #eee0dd; flex:1 1 100%; width:100%; }
   .cond-box h2 { font-size:16px; margin:0 0 16px; color:var(--accent); }
@@ -100,8 +101,22 @@
 </head>
 <body>
 
+<header>
+  <div class="topbar">
+    <span>CIN IT075091C200116647</span>
+    <span><a href="mailto:gianlucadec@libero.it">gianlucadec@libero.it</a> · <a href="tel:+393317203096">+39 331 7203096</a></span>
+  </div>
+</header>
+
+<div class="hero-header">
+  <div class="lang-switch" id="site-lang-switch"></div>
+  <div class="logo-wrap"><a href="index.html"><img class="logo-img" src="images/logo.png" alt="Greta's House - Casa Vacanze Otranto"></a></div>
+  <p class="brand-sub" id="brand-sub">Casa Vacanze · Otranto, Selva del Turchese</p>
+  <ul class="pill-nav" id="site-nav"></ul>
+</div>
+
 <div class="wrap" style="position:relative">
-  <div class="lang-switch" id="lang-switch"></div>
+  <div class="booking-lang-switch" id="lang-switch"></div>
   <div class="searchcard">
     <div class="cal-wrap">
       <div class="cal-header">
@@ -127,6 +142,10 @@
 
   <div class="cond-box" id="cond-box" style="display:none"></div>
 </div>
+
+<footer>
+  © 2026 Greta's House — Selva del Turchese, Otranto (LE) — CIN IT075091C200116647
+</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -218,7 +237,9 @@ var I18N = {
     condCancellazione: 'Politica di cancellazione',
     condPagamento: 'Termini di pagamento',
     condRegole: 'Regolamento interno',
-    condAltro: 'Altre condizioni'
+    condAltro: 'Altre condizioni',
+    brandSub: 'Casa Vacanze · Otranto, Selva del Turchese',
+    navHome: 'Home', navChiSiamo: 'Chi siamo', navGalleria: 'Galleria', navPrezzi: 'Listino prezzi', navEventi: 'Eventi & Dintorni', navContatti: 'Contatti'
   },
   en: {
     pageTitle: "Book — Greta's House",
@@ -288,7 +309,9 @@ var I18N = {
     condCancellazione: 'Cancellation policy',
     condPagamento: 'Payment terms',
     condRegole: 'House rules',
-    condAltro: 'Other conditions'
+    condAltro: 'Other conditions',
+    brandSub: 'Holiday Home · Otranto, Selva del Turchese',
+    navHome: 'Home', navChiSiamo: 'About us', navGalleria: 'Gallery', navPrezzi: 'Prices', navEventi: 'Events & Around', navContatti: 'Contact'
   },
   fr: {
     pageTitle: "Réserver — Greta's House",
@@ -358,7 +381,9 @@ var I18N = {
     condCancellazione: "Politique d'annulation",
     condPagamento: 'Conditions de paiement',
     condRegole: 'Règlement intérieur',
-    condAltro: 'Autres conditions'
+    condAltro: 'Autres conditions',
+    brandSub: 'Maison de Vacances · Otranto, Selva del Turchese',
+    navHome: 'Accueil', navChiSiamo: 'À propos', navGalleria: 'Galerie', navPrezzi: 'Tarifs', navEventi: 'Événements', navContatti: 'Contact'
   }
 };
 var L = I18N[LANG];
