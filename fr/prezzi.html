@@ -41,27 +41,12 @@
 
 <section style="padding-top:6px; padding-bottom:6px;">
   <p style="text-align:center;">
-    <button type="button" class="cta-btn" onclick="mostraDisponibilita()">
+    <a href="../prenota-gretashouse.html?lang=fr" class="cta-btn" style="display:inline-block; text-decoration:none;">
       <span class="main">Vérifier la disponibilité et réserver</span>
       <span class="sub">Prix en temps réel · Confirmation immédiate</span>
-    </button>
+    </a>
   </p>
 </section>
-
-<section id="disponibilita" style="display:none; padding-top:10px;">
-  <iframe class="booking-embed" id="booking-iframe" data-src="https://gianlucadecicco75.github.io/gretashouse-pms/prenota-gretashouse.html" title="Disponibilité et réservation - Greta's House" loading="lazy"></iframe>
-  <p class="booking-note">Prix en temps réel · Confirmation immédiate. Si le formulaire ne se charge pas, <a href="https://gianlucadecicco75.github.io/gretashouse-pms/prenota-gretashouse.html" target="_blank" rel="noopener">ouvrez-le dans une page séparée</a>.</p>
-</section>
-
-<script>
-function mostraDisponibilita() {
-  var sec = document.getElementById('disponibilita');
-  var iframe = document.getElementById('booking-iframe');
-  if (!iframe.src) iframe.src = iframe.getAttribute('data-src');
-  sec.style.display = '';
-  sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-</script>
 
 <section class="soft" id="recensioni">
   <div class="inner" style="text-align:center;">
