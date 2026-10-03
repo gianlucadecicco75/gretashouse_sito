@@ -2,74 +2,42 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://gretashouse.it/</loc>
+    <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://gretashouse.it/chi-siamo.html</loc>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://gretashouse.it/galleria.html</loc>
+    <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://gretashouse.it/prezzi.html</loc>
+    <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
+    <loc>https://gretashouse.it/galleria.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://gretashouse.it/eventi.html</loc>
-    <priority>0.7</priority>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
   </url>
   <url>
     <loc>https://gretashouse.it/contatti.html</loc>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://gretashouse.it/en/</loc>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://gretashouse.it/en/chi-siamo.html</loc>
+    <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://gretashouse.it/en/galleria.html</loc>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>https://gretashouse.it/en/prezzi.html</loc>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://gretashouse.it/en/eventi.html</loc>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>https://gretashouse.it/en/contatti.html</loc>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>https://gretashouse.it/fr/</loc>
+    <loc>https://gretashouse.it/en/index.html</loc>
+    <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://gretashouse.it/fr/chi-siamo.html</loc>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://gretashouse.it/fr/galleria.html</loc>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>https://gretashouse.it/fr/prezzi.html</loc>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://gretashouse.it/fr/eventi.html</loc>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>https://gretashouse.it/fr/contatti.html</loc>
-    <priority>0.5</priority>
+    <loc>https://gretashouse.it/fr/index.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
   </url>
 </urlset>
