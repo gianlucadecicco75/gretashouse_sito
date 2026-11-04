@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Check-in online — Greta's House</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%23c2185b'/%3E%3Ctext x='12' y='17' font-size='15' text-anchor='middle'%3E%F0%9F%8F%A1%3C/text%3E%3C/svg%3E">
+<style>
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:#faf6f4; color:#1a1a1a; }
+  .top { background:#1e88e5; color:#fff; padding:26px 20px 22px; text-align:center; }
+  .top h1 { margin:0; font-size:24px; font-weight:400; font-family:Georgia,'Times New Roman',serif; font-style:italic; }
+  .top .sub { font-size:13px; opacity:.9; margin-top:4px; }
+  .wrap { max-width:560px; margin:0 auto; padding:18px 16px 60px; }
+  .card { background:#fff; border:1px solid #eee0dd; border-radius:14px; padding:18px 20px; margin-bottom:16px; box-shadow:0 1px 3px rgba(0,0,0,.04); }
+  .card h2 { font-size:15px; margin:0 0 12px; color:#8e1046; }
+  .rowinfo { display:flex; justify-content:space-between; font-size:14px; padding:6px 0; border-bottom:1px solid #f3ecea; }
+  .rowinfo:last-child { border-bottom:none; }
+  .rowinfo span:first-child { color:#8a7a77; }
+  .rowinfo span:last-child { font-weight:700; }
+  .guestcard { border:1.5px solid #eee0dd; border-radius:12px; padding:16px; margin-bottom:14px; }
+  .guestcard h3 { font-size:14px; margin:0 0 12px; color:#1e88e5; }
+  .field { margin-bottom:11px; }
+  .field label { display:block; font-size:11.5px; font-weight:700; color:#6b5b58; margin-bottom:4px; text-transform:uppercase; letter-spacing:.3px; }
+  .field input, .field select { width:100%; padding:10px 11px; border:1px solid #ddd0cd; border-radius:8px; font-size:14px; background:#fff; }
+  .row2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .btn { display:block; width:100%; padding:14px; border-radius:10px; border:none; font-size:15px; font-weight:700; cursor:pointer; }
+  .btn-primary { background:#2c3e50; color:#fff; }
+  .btn-primary:disabled { opacity:.5; }
+  .msg { text-align:center; padding:60px 20px; color:#8a7a77; font-size:14px; }
+  .msg.err { color:#b91c1c; }
+  .ok-box { text-align:center; padding:50px 20px; }
+  .ok-box .tick { font-size:52px; }
+  .ok-box h2 { color:#166534; margin:10px 0 6px; }
+  .privacy { font-size:11px; color:#9a8b88; margin-top:14px; line-height:1.5; }
+
+  /* --- Consenso privacy --- */
+  .consent-box { display:flex; align-items:flex-start; gap:10px; background:#fbf5f0; border:1px solid #eee0dd; border-radius:10px; padding:12px 14px; margin:14px 0; }
+  .consent-box input[type="checkbox"] { width:18px; height:18px; margin-top:2px; flex:none; accent-color:#1e88e5; }
+  .consent-box label { font-size:12.5px; color:#4a3f3d; line-height:1.5; cursor:pointer; }
+  .consent-box a { color:#1e88e5; }
+
+  /* --- Firma digitale --- */
+  .sig-wrap { margin:14px 0; }
+  .sig-wrap > label { display:block; font-size:11.5px; font-weight:700; color:#6b5b58; margin-bottom:6px; text-transform:uppercase; letter-spacing:.3px; }
+  .sig-hint { font-size:11.5px; color:#9a8b88; margin-bottom:6px; }
+  .sig-pad-box { position:relative; border:1.5px dashed #ddd0cd; border-radius:10px; background:#fff; overflow:hidden; touch-action:none; }
+  #sig-canvas { display:block; width:100%; height:150px; cursor:crosshair; }
+  .sig-placeholder { position:absolute; top:50%; left:0; right:0; transform:translateY(-50%); text-align:center; font-size:12.5px; color:#c9bcb9; pointer-events:none; }
+  .sig-actions { display:flex; justify-content:flex-end; margin-top:6px; }
+  .sig-clear { background:none; border:none; color:#b91c1c; font-size:12px; font-weight:700; cursor:pointer; padding:4px 6px; }
+
+  /* --- Guida ospiti --- */
+  .guide-toggle { display:flex; align-items:center; justify-content:space-between; cursor:pointer; }
+  .guide-toggle h2 { margin:0; }
+  .guide-toggle .chev { font-size:13px; color:#8a7a77; transition:transform .2s; }
+  .guide-toggle.open .chev { transform:rotate(180deg); }
+  .guide-body { display:none; margin-top:14px; }
+  .guide-body.open { display:block; }
+  .guide-welcome { font-size:13.5px; color:#4a3f3d; line-height:1.6; margin-bottom:14px; }
+  .guide-sec { margin-bottom:16px; }
+  .guide-sec:last-child { margin-bottom:0; }
+  .guide-sec h4 { font-size:12.5px; text-transform:uppercase; letter-spacing:.4px; color:#8e1046; margin:0 0 8px; }
+  .guide-info-row { display:flex; justify-content:space-between; font-size:13px; padding:5px 0; border-bottom:1px solid #f3ecea; }
+  .guide-info-row:last-child { border-bottom:none; }
+  .guide-info-row span:first-child { color:#8a7a77; }
+  .guide-info-row span:last-child { font-weight:700; text-align:right; }
+  .guide-contact { display:flex; align-items:center; gap:10px; padding:7px 0; border-bottom:1px solid #f3ecea; font-size:13px; }
+  .guide-contact:last-child { border-bottom:none; }
+  .guide-contact .gi { font-size:18px; flex:none; }
+  .guide-contact .gc-label { color:#8a7a77; font-size:11.5px; }
+  .guide-contact .gc-main { font-weight:700; }
+  .guide-contact .gc-sub { color:#9a8b88; font-size:11px; }
+  .guide-item { padding:9px 0; border-bottom:1px solid #f3ecea; font-size:13px; }
+  .guide-item:last-child { border-bottom:none; }
+  .guide-item .gi-name { font-weight:700; }
+  .guide-item .gi-desc { color:#6b5b58; font-size:12.5px; margin-top:2px; line-height:1.45; }
+  .guide-item .gi-dist { color:#9a8b88; font-size:11px; margin-top:3px; }
+  .guide-rule { display:flex; gap:8px; align-items:flex-start; padding:5px 0; font-size:13px; }
+  .guide-appliance { background:#fbf5f0; border-radius:10px; padding:10px 12px; margin-bottom:8px; }
+  .guide-appliance .ga-name { font-weight:700; font-size:13px; margin-bottom:4px; }
+  .guide-appliance .ga-instr { font-size:12.5px; color:#6b5b58; line-height:1.5; white-space:pre-wrap; }
+  .guide-appliance .ga-photos img { width:60px; height:60px; object-fit:cover; border-radius:6px; margin:4px 4px 0 0; }
+  .guide-footer { font-size:11.5px; color:#9a8b88; text-align:center; margin-top:14px; }
+
+  .field-opt { font-weight:400; text-transform:none; letter-spacing:0; color:#b3a7a4; font-size:10.5px; }
+  .doc-photos { margin-top:6px; }
+  .doc-photos .row2 { gap:8px; }
+  .doc-photo-slot { border:1.5px dashed #ddd0cd; border-radius:10px; text-align:center; padding:10px 6px; cursor:pointer; background:#fbf8f7; position:relative; }
+  .doc-photo-slot input[type="file"] { position:absolute; inset:0; opacity:0; cursor:pointer; }
+  .doc-photo-slot .dp-label { font-size:11px; color:#8a7a77; font-weight:700; }
+  .doc-photo-slot .dp-hint { font-size:10px; color:#b3a7a4; margin-top:2px; }
+  .doc-photo-slot img { max-width:100%; max-height:90px; border-radius:6px; margin-top:6px; display:block; margin-left:auto; margin-right:auto; }
+</style>
+</head>
+<body>
+
+<div class="top">
+  <h1>🏡 Greta's House</h1>
+  <div class="sub">Check-in online</div>
+</div>
+
+<div class="wrap" id="content"><div class="msg">Caricamento…</div></div>
+
+<script>
+const SUPABASE_URL = 'https://xhacoxddmcjwvwwygdsa.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhoYWNveGRkbWNqd3Z3d3lnZHNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY0NjM3ODUsImV4cCI6MjEwMjAzOTc4NX0.G7dbZAyG9hinOU-h3WmsZGeCNd8AfwXY4eN7doSL5qk';
+const FUNZIONE_URL = SUPABASE_URL + '/functions/v1/checkin-online';
+
+function paramToken() {
+  const p = new URLSearchParams(window.location.search);
+  return p.get('token') || '';
+}
+
+function fmtData(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso + 'T00:00:00');
+  return d.toLocaleDateString('it-IT', { weekday:'short', day:'2-digit', month:'2-digit', year:'numeric' });
+}
+
+function escHtml(s) {
+  return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+let prenotazione = null;
+let token = '';
+let fotoDocumenti = {}; // { "0-fronte": "data:image/...", "0-retro": "...", "1-fronte": ... }
+
+async function carica() {
+  token = paramToken();
+  const el = document.getElementById('content');
+  if (!token) {
+    el.innerHTML = '<div class="msg err">Link non valido — manca il codice di accesso.</div>';
+    return;
+  }
+  try {
+    const res = await fetch(FUNZIONE_URL + '?token=' + encodeURIComponent(token), {
+      headers: { 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY, 'apikey': SUPABASE_ANON_KEY }
+    });
+    const data = await res.json();
+    if (!data.ok) {
+      el.innerHTML = '<div class="msg err">' + (data.errore || 'Prenotazione non trovata.') + '</div>';
+      return;
+    }
+    prenotazione = data.booking;
+    renderForm(data.propertyName, data.booking);
+    caricaGuida(); // in parallelo, non blocca il resto della pagina
+  } catch (err) {
+    el.innerHTML = '<div class="msg err">Errore di connessione — riprova tra poco.</div>';
+  }
+}
+
+function renderForm(propertyName, b) {
+  const el = document.getElementById('content');
+  const persone = (b.adults || 1) + (b.children || 0);
+  const componentiEsistenti = b.componenti || [];
+  const giaFatto = (b.status === 'check-in' && componentiEsistenti.length >= persone);
+  componentiEsistenti.forEach(function(c, i){
+    if (c.fotoDocFronte) fotoDocumenti[i+'-fronte'] = c.fotoDocFronte;
+    if (c.fotoDocRetro) fotoDocumenti[i+'-retro'] = c.fotoDocRetro;
+  });
+
+  let guestFields = '';
+  for (let i = 0; i < persone; i++) {
+    const c = componentiEsistenti[i] || {};
+    guestFields += '<div class="guestcard">' +
+      '<h3>👤 Ospite ' + (i+1) + (i===0 ? ' (intestatario)' : '') + '</h3>' +
+      '<div class="row2">' +
+        '<div class="field"><label>Cognome</label><input type="text" id="g-cognome-'+i+'" value="'+(c.cognome||'')+'"></div>' +
+        '<div class="field"><label>Nome</label><input type="text" id="g-nome-'+i+'" value="'+(c.nome||'')+'"></div>' +
+      '</div>' +
+      '<div class="row2">' +
+        '<div class="field"><label>Sesso</label><select id="g-sesso-'+i+'"><option value="M" '+(c.sesso!=='F'?'selected':'')+'>M</option><option value="F" '+(c.sesso==='F'?'selected':'')+'>F</option></select></div>' +
+        '<div class="field"><label>Data di nascita</label><input type="date" id="g-nascita-'+i+'" value="'+(c.dataNascita||'')+'"></div>' +
+      '</div>' +
+      '<div class="row2">' +
+        '<div class="field"><label>Luogo di nascita</label><input type="text" id="g-luogonascita-'+i+'" value="'+(c.luogoNascita||'')+'" placeholder="Es. Otranto"></div>' +
+        '<div class="field"><label>Cittadinanza</label><input type="text" id="g-cittadinanza-'+i+'" value="'+(c.cittadinanza||'Italia')+'"></div>' +
+      '</div>' +
+      '<div class="row2">' +
+        '<div class="field"><label>Stato di residenza</label><input type="text" id="g-statores-'+i+'" value="'+(c.statoResidenza||c.cittadinanza||'Italia')+'"></div>' +
+        '<div class="field"><label>Comune di residenza</label><input type="text" id="g-residenza-'+i+'" value="'+(c.residenza||'')+'" placeholder="Es. Otranto"></div>' +
+      '</div>' +
+      '<div class="row2">' +
+        '<div class="field"><label>Indirizzo <span class="field-opt">(facoltativo)</span></label><input type="text" id="g-indirizzo-'+i+'" value="'+(c.indirizzo||'')+'" placeholder="Via, numero civico"></div>' +
+        '<div class="field"><label>CAP <span class="field-opt">(facoltativo)</span></label><input type="text" id="g-cap-'+i+'" value="'+(c.cap||'')+'"></div>' +
+      '</div>' +
+      '<div class="row2">' +
+        '<div class="field"><label>Tipo documento'+(i===0?'':' <span class="field-opt">(facoltativo)</span>')+'</label><select id="g-tipodoc-'+i+'">' +
+          '<option value="" '+(!c.tipoDoc?'selected':'')+'>—</option>' +
+          '<option value="IDELE" '+(c.tipoDoc==='IDELE'?'selected':'')+'>Carta d\'identità</option>' +
+          '<option value="PASOR" '+(c.tipoDoc==='PASOR'?'selected':'')+'>Passaporto</option>' +
+          '<option value="PATEN" '+(c.tipoDoc==='PATEN'?'selected':'')+'>Patente</option>' +
+        '</select></div>' +
+        '<div class="field"><label>N. documento'+(i===0?'':' <span class="field-opt">(facoltativo)</span>')+'</label><input type="text" id="g-numdoc-'+i+'" value="'+(c.numDoc||'')+'"></div>' +
+      '</div>' +
+      '<div class="doc-photos">' +
+        '<label style="display:block;font-size:11.5px;font-weight:700;color:#6b5b58;margin-bottom:6px;text-transform:uppercase;letter-spacing:.3px">Foto documento ' + (i===0 ? '<span class="field-opt" style="text-transform:none">(almeno una tra fronte e retro)</span>' : '<span class="field-opt" style="text-transform:none">(facoltativo)</span>') + '</label>' +
+        '<div class="row2">' +
+          '<div class="doc-photo-slot" id="dp-fronte-box-'+i+'">' +
+            '<input type="file" accept="image/*" capture="environment" onchange="caricaFotoDoc(this,'+i+',\'fronte\')">' +
+            '<div class="dp-label">📷 Fronte</div><div class="dp-hint">tocca per scattare/caricare</div>' +
+            '<img id="dp-fronte-img-'+i+'" style="display:'+(c.fotoDocFronte?'block':'none')+'" src="'+(c.fotoDocFronte||'')+'">' +
+          '</div>' +
+          '<div class="doc-photo-slot" id="dp-retro-box-'+i+'">' +
+            '<input type="file" accept="image/*" capture="environment" onchange="caricaFotoDoc(this,'+i+',\'retro\')">' +
+            '<div class="dp-label">📷 Retro</div><div class="dp-hint">tocca per scattare/caricare</div>' +
+            '<img id="dp-retro-img-'+i+'" style="display:'+(c.fotoDocRetro?'block':'none')+'" src="'+(c.fotoDocRetro||'')+'">' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  const infoCard = '<div class="card">' +
+      '<h2>Il tuo soggiorno</h2>' +
+      '<div class="rowinfo"><span>Struttura</span><span>' + (propertyName||'Greta\'s House') + '</span></div>' +
+      '<div class="rowinfo"><span>Unità</span><span>' + (b.roomName||'') + '</span></div>' +
+      '<div class="rowinfo"><span>Check-in</span><span>' + fmtData(b.checkin) + '</span></div>' +
+      '<div class="rowinfo"><span>Check-out</span><span>' + fmtData(b.checkout) + '</span></div>' +
+      '<div class="rowinfo"><span>Ospiti</span><span>' + persone + '</span></div>' +
+    '</div>';
+
+  const guideCard = '<div class="card" id="guide-card">' +
+      '<div class="guide-toggle" id="guide-toggle" onclick="toggleGuida()"><h2>🗺️ Guida al soggiorno</h2><span class="chev">▾</span></div>' +
+      '<div class="guide-body" id="guide-body"><div class="msg" style="padding:20px 0">Caricamento guida…</div></div>' +
+    '</div>';
+
+  if (giaFatto) {
+    el.innerHTML =
+      '<div class="card"><div class="ok-box">' +
+        '<div class="tick">✅</div>' +
+        '<h2>Check-in già completato</h2>' +
+        '<p style="color:#8a7a77;font-size:13.5px">I tuoi dati sono già stati ricevuti. Ci vediamo presto!</p>' +
+      '</div></div>' + infoCard + guideCard;
+    return;
+  }
+
+  el.innerHTML = infoCard +
+    '<div class="card">' +
+      '<h2>Dati degli ospiti</h2>' +
+      '<p style="font-size:12.5px;color:#8a7a77;margin-top:-6px">Compila i dati di ogni persona che soggiornerà — sono richiesti dalla legge per la registrazione degli ospiti.</p>' +
+      guestFields +
+      '<div class="consent-box">' +
+        '<input type="checkbox" id="consenso-privacy">' +
+        '<label for="consenso-privacy">Dichiaro che i dati inseriti sono veritieri e presto il consenso al trattamento dei miei dati personali e di quelli degli altri ospiti indicati, ai sensi del Regolamento UE 2016/679 (GDPR), per gli obblighi di registrazione e comunicazione alle autorità competenti.</label>' +
+      '</div>' +
+      '<div class="sig-wrap">' +
+        '<label>Firma dell\'intestatario</label>' +
+        '<div class="sig-hint">Firma qui sotto con il dito o il mouse per confermare i dati inseriti.</div>' +
+        '<div class="sig-pad-box"><canvas id="sig-canvas"></canvas><div class="sig-placeholder" id="sig-placeholder">✍️ Firma qui</div></div>' +
+        '<div class="sig-actions"><button type="button" class="sig-clear" onclick="pulisciFirma()">Cancella firma</button></div>' +
+      '</div>' +
+      '<button class="btn btn-primary" id="btn-invia" onclick="inviaCheckin()">✅ Invia i miei dati</button>' +
+      '<div class="privacy">I dati inseriti sono trattati esclusivamente per gli obblighi di registrazione degli ospiti e comunicati alle autorità competenti come previsto dalla normativa vigente.</div>' +
+    '</div>' + guideCard;
+
+  initFirma();
+}
+
+/* ========== Firma digitale (canvas) ========== */
+let sigCtx = null, sigDrawing = false, sigVuota = true;
+
+function initFirma() {
+  const canvas = document.getElementById('sig-canvas');
+  if (!canvas) return;
+  const box = canvas.parentElement;
+  const ratio = window.devicePixelRatio || 1;
+  const w = box.clientWidth, h = 150;
+  canvas.width = w * ratio;
+  canvas.height = h * ratio;
+  sigCtx = canvas.getContext('2d');
+  sigCtx.scale(ratio, ratio);
+  sigCtx.lineWidth = 2.2;
+  sigCtx.lineCap = 'round';
+  sigCtx.strokeStyle = '#1a1a1a';
+  sigVuota = true;
+
+  function pos(e) {
+    const r = canvas.getBoundingClientRect();
+    const t = e.touches && e.touches[0] ? e.touches[0] : e;
+    return { x: t.clientX - r.left, y: t.clientY - r.top };
+  }
+  function start(e) {
+    e.preventDefault();
+    sigDrawing = true;
+    const p = pos(e);
+    sigCtx.beginPath();
+    sigCtx.moveTo(p.x, p.y);
+    const ph = document.getElementById('sig-placeholder');
+    if (ph) ph.style.display = 'none';
+  }
+  function move(e) {
+    if (!sigDrawing) return;
+    e.preventDefault();
+    const p = pos(e);
+    sigCtx.lineTo(p.x, p.y);
+    sigCtx.stroke();
+    sigVuota = false;
+  }
+  function end(e) { sigDrawing = false; }
+
+  canvas.addEventListener('mousedown', start);
+  canvas.addEventListener('mousemove', move);
+  window.addEventListener('mouseup', end);
+  canvas.addEventListener('touchstart', start, { passive:false });
+  canvas.addEventListener('touchmove', move, { passive:false });
+  canvas.addEventListener('touchend', end);
+}
+
+/* ========== Foto documento (fronte/retro), ridimensionate prima di essere inviate ========== */
+function ridimensionaFotoDoc(file) {
+  return new Promise(function(resolve, reject) {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var img = new Image();
+      img.onload = function() {
+        var maxLato = 1400;
+        var w = img.width, h = img.height;
+        if (w > maxLato || h > maxLato) {
+          if (w > h) { h = Math.round(h * maxLato / w); w = maxLato; }
+          else { w = Math.round(w * maxLato / h); h = maxLato; }
+        }
+        var canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', 0.75));
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+async function caricaFotoDoc(input, i, lato) {
+  var file = input.files && input.files[0];
+  if (!file) return;
+  try {
+    var dataUrl = await ridimensionaFotoDoc(file);
+    fotoDocumenti[i + '-' + lato] = dataUrl;
+    var img = document.getElementById('dp-' + lato + '-img-' + i);
+    if (img) { img.src = dataUrl; img.style.display = 'block'; }
+  } catch (e) {
+    alert('Impossibile caricare la foto — riprova.');
+  }
+}
+
+function pulisciFirma() {
+  const canvas = document.getElementById('sig-canvas');
+  if (!canvas || !sigCtx) return;
+  sigCtx.clearRect(0, 0, canvas.width, canvas.height);
+  sigVuota = true;
+  const ph = document.getElementById('sig-placeholder');
+  if (ph) ph.style.display = 'block';
+}
+
+function firmaDataUrl() {
+  const canvas = document.getElementById('sig-canvas');
+  if (!canvas || sigVuota) return '';
+  // Ridisegna su sfondo bianco (il canvas è trasparente) prima di esportare
+  const out = document.createElement('canvas');
+  out.width = canvas.width; out.height = canvas.height;
+  const octx = out.getContext('2d');
+  octx.fillStyle = '#fff';
+  octx.fillRect(0, 0, out.width, out.height);
+  octx.drawImage(canvas, 0, 0);
+  return out.toDataURL('image/png');
+}
+
+/* ========== Invio check-in ========== */
+async function inviaCheckin() {
+  const persone = (prenotazione.adults || 1) + (prenotazione.children || 0);
+  const componenti = [];
+  for (let i = 0; i < persone; i++) {
+    const cognome = (document.getElementById('g-cognome-'+i)||{value:''}).value.trim();
+    const nome = (document.getElementById('g-nome-'+i)||{value:''}).value.trim();
+    if (!cognome || !nome) {
+      alert('Compila almeno cognome e nome per ogni ospite (ospite ' + (i+1) + ' mancante).');
+      return;
+    }
+    var tipoDoc = (document.getElementById('g-tipodoc-'+i)||{value:''}).value;
+    var numDoc = (document.getElementById('g-numdoc-'+i)||{value:''}).value.trim();
+    if (i === 0 && (!tipoDoc || !numDoc)) {
+      alert('Per l\'intestatario della prenotazione (ospite 1) sono obbligatori tipo e numero di documento.');
+      return;
+    }
+    if (i === 0 && !fotoDocumenti['0-fronte'] && !fotoDocumenti['0-retro']) {
+      alert('Per l\'intestatario della prenotazione (ospite 1) è obbligatoria almeno una foto del documento (fronte o retro).');
+      return;
+    }
+    componenti.push({
+      cognome: cognome,
+      nome: nome,
+      sesso: (document.getElementById('g-sesso-'+i)||{value:'M'}).value,
+      dataNascita: (document.getElementById('g-nascita-'+i)||{value:''}).value,
+      luogoNascita: (document.getElementById('g-luogonascita-'+i)||{value:''}).value.trim(),
+      cittadinanza: (document.getElementById('g-cittadinanza-'+i)||{value:''}).value.trim(),
+      statoResidenza: (document.getElementById('g-statores-'+i)||{value:''}).value.trim(),
+      residenza: (document.getElementById('g-residenza-'+i)||{value:''}).value.trim(),
+      indirizzo: (document.getElementById('g-indirizzo-'+i)||{value:''}).value.trim(),
+      cap: (document.getElementById('g-cap-'+i)||{value:''}).value.trim(),
+      tipoDoc: tipoDoc,
+      numDoc: numDoc,
+      fotoDocFronte: fotoDocumenti[i+'-fronte'] || '',
+      fotoDocRetro: fotoDocumenti[i+'-retro'] || '',
+    });
+  }
+
+  const consenso = document.getElementById('consenso-privacy');
+  if (!consenso || !consenso.checked) {
+    alert('Per procedere è necessario accettare il consenso al trattamento dei dati personali.');
+    return;
+  }
+  const firma = firmaDataUrl();
+  if (!firma) {
+    alert('Per procedere è necessario firmare nell\'apposito riquadro.');
+    return;
+  }
+
+  const btn = document.getElementById('btn-invia');
+  btn.disabled = true;
+  btn.textContent = 'Invio in corso…';
+
+  try {
+    const res = await fetch(FUNZIONE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY, 'apikey': SUPABASE_ANON_KEY },
+      body: JSON.stringify({
+        token: token,
+        componenti: componenti,
+        consensoPrivacy: true,
+        consensoData: new Date().toISOString(),
+        firma: firma
+      })
+    });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.errore || 'Invio non riuscito');
+    const guideCardHtml = document.getElementById('guide-card') ? document.getElementById('guide-card').outerHTML : '';
+    document.getElementById('content').innerHTML =
+      '<div class="card"><div class="ok-box">' +
+        '<div class="tick">✅</div>' +
+        '<h2>Check-in completato!</h2>' +
+        '<p style="color:#8a7a77;font-size:13.5px">Grazie, i tuoi dati sono stati ricevuti correttamente.<br>Ti aspettiamo a Greta\'s House!</p>' +
+      '</div></div>' + guideCardHtml;
+    caricaGuida();
+  } catch (err) {
+    btn.disabled = false;
+    btn.textContent = '✅ Invia i miei dati';
+    alert('Invio non riuscito: ' + (err.message || 'errore sconosciuto') + '\nRiprova tra poco.');
+  }
+}
+
+/* ========== Guida al soggiorno (letta direttamente da Supabase, stessa "guidaOspiti" del gestionale) ========== */
+let guidaCache = null;
+
+function toggleGuida() {
+  const toggle = document.getElementById('guide-toggle');
+  const body = document.getElementById('guide-body');
+  if (!toggle || !body) return;
+  const apri = !body.classList.contains('open');
+  toggle.classList.toggle('open', apri);
+  body.classList.toggle('open', apri);
+}
+
+async function caricaGuida() {
+  const body = document.getElementById('guide-body');
+  if (!body) return;
+  if (guidaCache) { renderGuida(guidaCache); return; }
+  try {
+    // Letta dallo "sportello pubblico" (funzione blob_pubblico su Supabase): la tabella app_blobs
+    // non è più leggibile direttamente da chi non ha fatto il login.
+    const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/blob_pubblico', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ k: 'guidaOspiti' })
+    });
+    const risposta = res.ok ? await res.json() : null;
+    const d = (risposta && typeof risposta === 'object' && !Array.isArray(risposta)) ? risposta : null;
+    if (!d) {
+      body.innerHTML = '<div style="font-size:12.5px;color:#9a8b88;padding:10px 0">Guida non ancora disponibile — contattaci per qualsiasi informazione sul soggiorno.</div>';
+      return;
+    }
+    guidaCache = d;
+    renderGuida(d);
+  } catch (e) {
+    body.innerHTML = '<div style="font-size:12.5px;color:#9a8b88;padding:10px 0">Guida momentaneamente non disponibile.</div>';
+  }
+}
+
+function renderGuida(d) {
+  const body = document.getElementById('guide-body');
+  if (!body) return;
+  let html = '';
+  if (d.welcome) html += '<div class="guide-welcome">' + escHtml(d.welcome) + '</div>';
+
+  if (d.info && d.info.length) {
+    html += '<div class="guide-sec"><h4>Informazioni utili</h4>' +
+      d.info.map(f => '<div class="guide-info-row"><span>'+escHtml(f.label)+'</span><span>'+escHtml(f.value)+'</span></div>').join('') +
+      '</div>';
+  }
+  if (d.contacts && d.contacts.length) {
+    html += '<div class="guide-sec"><h4>Contatti utili</h4>' +
+      d.contacts.map(c => '<div class="guide-contact"><span class="gi">'+escHtml(c.icon||'📞')+'</span><div><div class="gc-label">'+escHtml(c.label)+'</div><div class="gc-main">'+escHtml(c.main)+'</div>'+(c.sub?'<div class="gc-sub">'+escHtml(c.sub)+'</div>':'')+'</div></div>').join('') +
+      '</div>';
+  }
+  const listSec = (title, arr) => {
+    if (!arr || !arr.length) return '';
+    return '<div class="guide-sec"><h4>'+title+'</h4>' +
+      arr.map(it => '<div class="guide-item"><span class="gi-name">'+escHtml(it.emoji||'📍')+' '+escHtml(it.name)+'</span><div class="gi-desc">'+escHtml(it.desc)+'</div>'+(it.dist?'<div class="gi-dist">'+escHtml(it.dist)+'</div>':'')+'</div>').join('') +
+      '</div>';
+  };
+  html += listSec('Dove mangiare', d.rest);
+  html += listSec('Spiagge', d.beach);
+  html += listSec('Da vedere', d.visit);
+  html += listSec('Attività ed esperienze', d.act);
+
+  if (d.rules && d.rules.length) {
+    html += '<div class="guide-sec"><h4>Regole della casa</h4>' +
+      d.rules.map(r => '<div class="guide-rule"><span>'+escHtml(r.icon||'📝')+'</span><span>'+escHtml(r.text)+'</span></div>').join('') +
+      '</div>';
+  }
+  if (d.appliances && d.appliances.length) {
+    html += '<div class="guide-sec"><h4>Elettrodomestici e comfort</h4>' +
+      d.appliances.map(a => {
+        const foto = (a.photos||[]).map(p => '<img src="'+p+'">').join('');
+        return '<div class="guide-appliance"><div class="ga-name">'+escHtml(a.name)+'</div><div class="ga-instr">'+escHtml(a.instructions)+'</div>'+(foto?'<div class="ga-photos">'+foto+'</div>':'')+'</div>';
+      }).join('') +
+      '</div>';
+  }
+  if (d.footer) html += '<div class="guide-footer">' + escHtml(d.footer) + '</div>';
+
+  body.innerHTML = html || '<div style="font-size:12.5px;color:#9a8b88;padding:10px 0">Guida non ancora disponibile.</div>';
+}
+
+carica();
+</script>
+</body>
+</html>

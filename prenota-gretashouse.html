@@ -565,8 +565,8 @@ function buildCondizioniSitoHtml(settings) {
 
 async function caricaCondizioni() {
   try {
-    var risSet = await sb.from('app_blobs').select('data').eq('key', 'settings').maybeSingle();
-    var settings = (risSet.data && risSet.data.data) || {};
+    var risSet = await sb.rpc('blob_pubblico', { k: 'settings' });
+    var settings = risSet.data || {};
     var html = buildCondizioniSitoHtml(settings);
     var box = document.getElementById('cond-box');
     if (html) { box.innerHTML = html; box.style.display = 'block'; }
@@ -580,11 +580,11 @@ async function caricaDatiCalendario() {
     var risR = await sb.from('rooms').select('*').eq('status', 'disponibile');
     var risB = await sb.from('bookings').select('room_id, checkin, checkout, status').neq('status', 'cancellata');
     var risK = await sb.from('room_blocks').select('room_id, block_date');
-    var risRTcal = await sb.from('app_blobs').select('data').eq('key', 'regoleTipo').maybeSingle();
+    var risRTcal = await sb.rpc('blob_pubblico', { k: 'regoleTipo' });
     calRooms = risR.data || [];
     calBookings = risB.data || [];
     calBlocks = risK.data || [];
-    calChiusure = (risRTcal.data && risRTcal.data.data && risRTcal.data.data.chiusure) || {};
+    calChiusure = (risRTcal.data && risRTcal.data.chiusure) || {};
   } catch (e) {
     console.error('Calendario: dati non caricati', e);
     calRooms = []; calBookings = []; calBlocks = []; calChiusure = {};
@@ -793,24 +793,24 @@ async function cercaDisponibilita() {
     var risB = await sb.from('bookings').select('room_id, checkin, checkout, status').neq('status', 'cancellata');
     var risK = await sb.from('room_blocks').select('room_id, block_date');
     var risL = await sb.from('listino').select('*').eq('tariffa_id', 'standard');
-    var risRC = await sb.from('app_blobs').select('data').eq('key', 'revenueConfig').maybeSingle();
-    var risLA = await sb.from('app_blobs').select('data').eq('key', 'listinoAggiustamenti').maybeSingle();
-    var risRT = await sb.from('app_blobs').select('data').eq('key', 'regoleTipo').maybeSingle();
-    var risSet = await sb.from('app_blobs').select('data').eq('key', 'settings').maybeSingle();
+    var risRC = await sb.rpc('blob_pubblico', { k: 'revenueConfig' });
+    var risLA = await sb.rpc('blob_pubblico', { k: 'listinoAggiustamenti' });
+    var risRT = await sb.rpc('blob_pubblico', { k: 'regoleTipo' });
+    var risSet = await sb.rpc('blob_pubblico', { k: 'settings' });
     if (risR.error) throw risR.error;
     if (risB.error) throw risB.error;
     if (risL.error) throw risL.error;
     var rooms = risR.data, bookings = risB.data, listino = risL.data;
     var blocks = risK.data || [];
-    var minNottiPerTipo = (risRT.data && risRT.data.data && risRT.data.data.minNotti) || {};
-    var chiusurePerTipo = (risRT.data && risRT.data.data && risRT.data.data.chiusure) || {};
+    var minNottiPerTipo = (risRT.data && risRT.data.minNotti) || {};
+    var chiusurePerTipo = (risRT.data && risRT.data.chiusure) || {};
     var ctx = {
       rooms: rooms,
       bookings: bookings,
-      revenueConfig: (risRC.data && risRC.data.data) || { soglie: [], eventi: [] },
-      listinoAggiustamenti: (risLA.data && risLA.data.data) || [],
-      scontiSoggiornoLungo: (risSet.data && risSet.data.data && risSet.data.data.scontiSoggiornoLungo) || [],
-      markupOTA: (risSet.data && risSet.data.data && risSet.data.data.markupOTA) || 0
+      revenueConfig: risRC.data || { soglie: [], eventi: [] },
+      listinoAggiustamenti: risLA.data || [],
+      scontiSoggiornoLungo: (risSet.data && risSet.data.scontiSoggiornoLungo) || [],
+      markupOTA: (risSet.data && risSet.data.markupOTA) || 0
     };
 
     var occupatePerCamera = {};
@@ -969,19 +969,18 @@ async function confermaRichiesta(checkin, checkout, adults, children, roomName) 
     } catch (eDb) { console.error('Richiesta non salvata nel gestionale (verra comunque inviata via email):', eDb); }
 
     // Invia email reale (stesso sistema usato per le conferme di prenotazione)
-    var risBlob = await sb.from('app_blobs').select('data').eq('key', 'settings').maybeSingle();
-    var s = (risBlob.data && risBlob.data.data) || {};
+    // Le credenziali email NON passano più dal browser: l'invio le legge dal server (invio-ricevuta).
+    // "__struttura__" = l'email della struttura, risolta sempre dal server.
     var inviata = false;
-    if (s.emailInvioPromemoria && s.passwordInvioPromemoria) {
+    {
       var functionUrl = SUPABASE_URL + '/functions/v1/invio-ricevuta';
-      if (s.email) {
+      {
         // Notifica interna a Gian — resta sempre in italiano
         var risNotif = await fetch(functionUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer '+SUPABASE_ANON_KEY, 'apikey': SUPABASE_ANON_KEY },
           body: JSON.stringify({
-            smtpEmail: s.emailInvioPromemoria, smtpPassword: s.passwordInvioPromemoria,
-            to: s.email, toName: 'Greta\'s House',
+            to: '__struttura__', toName: 'Greta\'s House',
             subject: 'Nuova richiesta di disponibilità dal sito - ' + nomeCompleto,
             message: 'Nuova richiesta di disponibilità ricevuta dal sito web (lingua: ' + LANG.toUpperCase() + '):\n\nNome: ' + nomeCompleto + '\nTelefono: ' + telefono + '\nEmail: ' + email + '\n\nCheck-in: ' + fmtIT(checkin) + '\nCheck-out: ' + fmtIT(checkout) + '\nOspiti: ' + descrizioneOspitiOwner + (roomName ? '\nUnita: ' + roomName : '') + (note ? '\nNote: ' + note : '') + '\n\nVai su DeskFlow - Richieste di preventivo per gestirla.'
           })
@@ -993,7 +992,6 @@ async function confermaRichiesta(checkin, checkout, adults, children, roomName) 
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer '+SUPABASE_ANON_KEY, 'apikey': SUPABASE_ANON_KEY },
         body: JSON.stringify({
-          smtpEmail: s.emailInvioPromemoria, smtpPassword: s.passwordInvioPromemoria,
           to: email, toName: nomeCompleto,
           subject: L.emailRichiestaSubject,
           message: L.emailRichiestaBody(nomeCompleto, fmtIT(checkin), fmtIT(checkout), descrizioneOspitiGuest, roomName)
@@ -1088,29 +1086,25 @@ async function confermaPrenotazione(roomId, roomName, totale) {
     if (errB) throw errB;
 
     try {
-      var risBlob = await sb.from('app_blobs').select('data').eq('key', 'settings').maybeSingle();
-      var s = (risBlob.data && risBlob.data.data) || {};
-      if (s.emailInvioPromemoria && s.passwordInvioPromemoria) {
+      {
         var functionUrl = SUPABASE_URL + '/functions/v1/invio-ricevuta';
         // Email di conferma al cliente — nella lingua scelta sul sito
         fetch(functionUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer '+SUPABASE_ANON_KEY, 'apikey': SUPABASE_ANON_KEY },
           body: JSON.stringify({
-            smtpEmail: s.emailInvioPromemoria, smtpPassword: s.passwordInvioPromemoria,
             to: email, toName: nome,
             subject: L.emailPrenotConfermataSubject,
             message: L.emailPrenotConfermataBody(nome, roomName, ultimaRicerca.checkin, ultimaRicerca.checkout, totale.toFixed(2))
           })
         }).catch(function(){});
-        if (s.email) {
+        {
           // Notifica interna a Gian — resta sempre in italiano
           fetch(functionUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer '+SUPABASE_ANON_KEY, 'apikey': SUPABASE_ANON_KEY },
             body: JSON.stringify({
-              smtpEmail: s.emailInvioPromemoria, smtpPassword: s.passwordInvioPromemoria,
-              to: s.email, toName: 'Greta\'s House',
+              to: '__struttura__', toName: 'Greta\'s House',
               subject: 'Nuova prenotazione dal sito - '+nome,
               message: 'Nuova prenotazione ricevuta dal sito web (lingua: ' + LANG.toUpperCase() + '):\n\nOspite: '+nome+' ('+email+', '+telefono+')\nUnita: '+roomName+'\nCheck-in: '+ultimaRicerca.checkin+'\nCheck-out: '+ultimaRicerca.checkout+'\nTotale: EUR '+totale.toFixed(2)+(note?'\nNote: '+note:'')+'\n\nVai su DeskFlow - Prenotazioni per gestirla.'
             })
