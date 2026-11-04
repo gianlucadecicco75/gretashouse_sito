@@ -951,21 +951,27 @@ async function confermaRichiesta(checkin, checkout, adults, children, roomName) 
   try {
     // Salva la richiesta anche nel gestionale, tra le richieste di preventivo (se non riesce, l'email viene comunque inviata)
     try {
-      await sb.from('richieste_preventivo').insert({
-        id: 'rq_' + Date.now().toString(36) + Math.random().toString(36).slice(2,8),
-        guest_name: nomeCompleto,
-        email: email,
-        phone: telefono,
-        checkin: checkin,
-        checkout: checkout,
-        adults: adults,
-        children: children,
-        room_name: roomName || '',
-        status: 'nuova',
-        source: 'Sito web',
-        notes: note,
-        created_at: new Date().toISOString()
+      var idRichiesta = 'rq_' + Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+      // Formato identico a quello che il PMS legge: una riga { id, data } con i dati della richiesta dentro "data"
+      var risIns = await sb.from('richieste_preventivo').insert({
+        id: idRichiesta,
+        data: {
+          id: idRichiesta,
+          clientName: nomeCompleto,
+          clientEmail: email,
+          clientPhone: telefono,
+          checkin: checkin,
+          checkout: checkout,
+          adults: adults,
+          children: children,
+          roomTypeWanted: roomName || '',
+          fonte: 'Sito web',
+          message: note,
+          status: 'nuova',
+          createdAt: new Date().toISOString()
+        }
       });
+      if (risIns && risIns.error) throw risIns.error;
     } catch (eDb) { console.error('Richiesta non salvata nel gestionale (verra comunque inviata via email):', eDb); }
 
     // Invia email reale (stesso sistema usato per le conferme di prenotazione)
