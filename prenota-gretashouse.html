@@ -968,6 +968,7 @@ async function confermaRichiesta(checkin, checkout, adults, children, roomName) 
           fonte: 'Sito web',
           message: note,
           status: 'nuova',
+          sessionId: (function(){ try { return sessionStorage.getItem('gh_sid') || null; } catch (e) { return null; } })(),
           createdAt: new Date().toISOString()
         }
       });
