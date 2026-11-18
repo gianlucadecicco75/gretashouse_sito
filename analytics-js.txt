@@ -1,5 +1,16 @@
 (function () {
   try {
+    // Esclude le tue visite: apri il sito una volta con ?notrack=1 (per riattivare: ?notrack=0).
+    try {
+      var _q = new URLSearchParams(location.search).get('notrack');
+      if (_q === '1') localStorage.setItem('gh_notrack', '1');
+      if (_q === '0') localStorage.removeItem('gh_notrack');
+      if (localStorage.getItem('gh_notrack') === '1') return;
+    } catch (e) {}
+    // Esclude i programmi automatici (Google, controlli di velocità, anteprime dei link...)
+    var _ua = navigator.userAgent || '';
+    if (navigator.webdriver || /bot|crawl|spider|slurp|headless|lighthouse|pagespeed|gtmetrix|facebookexternalhit|preview|inspect/i.test(_ua)) return;
+
     var SUPABASE_URL = 'https://xhacoxddmcjwvwwygdsa.supabase.co';
     var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhoYWNveGRkbWNqd3Z3d3lnZHNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY0NjM3ODUsImV4cCI6MjEwMjAzOTc4NX0.G7dbZAyG9hinOU-h3WmsZGeCNd8AfwXY4eN7doSL5qk';
 
