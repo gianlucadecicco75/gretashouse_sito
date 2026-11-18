@@ -449,6 +449,8 @@ document.getElementById('brand-sub').textContent = L.brandSub;
 // la ricerca: se fallisce (rete, tabella non ancora creata) non succede nulla di visibile.
 function _trackRicercaSito(checkin, checkout, adults, children, esito) {
   try {
+    try { if (localStorage.getItem('gh_notrack') === '1') return; } catch (e) {}
+    if (navigator.webdriver || /bot|crawl|spider|slurp|headless|lighthouse|pagespeed|gtmetrix|facebookexternalhit|preview|inspect/i.test(navigator.userAgent || '')) return;
     var sid = null;
     try { sid = sessionStorage.getItem('gh_sid'); } catch (e) {}
     if (!sid) {
